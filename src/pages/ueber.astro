@@ -1,0 +1,136 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+// Über — kurz, persönlich, sicher. Haltung statt Lebenslauf.
+// Bewusst keine erfundenen Fakten (Jahre, Kunden, Orte). Was bleibt: die Haltung.
+const haltung = [
+  {
+    titel: "System statt Zufall",
+    text: "Eine Marke ist kein Logo, sondern ein Regelwerk. Ich baue Identitäten, die in jeder Anwendung dieselbe Sprache sprechen.",
+  },
+  {
+    titel: "Ruhe statt Lärm",
+    text: "Teuer wirkt nicht, was am lautesten ist, sondern was am sichersten steht. Weißraum, klare Hierarchie, ein Ton.",
+  },
+  {
+    titel: "Details, die tragen",
+    text: "Der erste Eindruck entscheidet in Sekunden, die Details entscheiden, ob er hält. An beidem arbeite ich gleich genau.",
+  },
+];
+---
+
+<BaseLayout
+  titel="Über · Emi · Grafikdesignerin"
+  beschreibung="Emi gestaltet Corporate Designs, Identitäten und Logos. Haltung statt Lebenslauf: System statt Zufall, Ruhe statt Lärm, Details, die tragen."
+>
+  <section class="ueber huelle">
+    <p class="eyebrow ueber__eyebrow" data-reveal>Über</p>
+    <h1 class="ueber__titel display" data-reveal style="--reveal-delay:.05s">
+      Ich gebe Marken eine Form,<br />der man vertraut.
+    </h1>
+    <div class="ueber__intro" data-reveal style="--reveal-delay:.15s">
+      <p class="fliesstext">
+        Mein Feld ist Corporate Design: Identitäten, Logos und die Systeme,
+        die daraus eine Marke machen. Vom ersten Zeichen bis zur letzten
+        Anwendung gestalte ich so, dass alles aus einem Guss wirkt: ruhig,
+        präzise, mit einer eigenen Haltung.
+      </p>
+      <p class="fliesstext">
+        Diese Seite ist selbst der Beweis. Der Rahmen aus Schrift, Raster und
+        Bewegung bleibt von Anfang bis Ende derselbe. Erst darin dürfen die
+        Projekte ihre eigene Welt entfalten. Genau so denke ich Marken:
+        ein sicherer Kern, in dem Vielfalt nicht beliebig, sondern souverän wird.
+      </p>
+    </div>
+  </section>
+
+  <section class="haltung huelle" aria-label="Haltung">
+    {
+      haltung.map((h, i) => (
+        <article class="haltung__item" data-reveal style={`--reveal-delay:${i * 0.08}s`}>
+          <span class="haltung__nr eyebrow ziffern-tab">{String(i + 1).padStart(2, "0")}</span>
+          <h2 class="haltung__titel titel">{h.titel}</h2>
+          <p class="haltung__text fliesstext">{h.text}</p>
+        </article>
+      ))
+    }
+  </section>
+
+  <section class="signatur huelle" data-reveal>
+    <img
+      class="signatur__bild"
+      src="/brand/emi-signatur-dunkel.png"
+      alt="Handschriftliche Unterschrift von Emi"
+      width="220"
+      height="92"
+      loading="lazy"
+    />
+    <p class="signatur__zeile caption">
+      Lust auf eine Marke, die sicher wirkt?
+      <a href="/kontakt" class="link-unterstrich">Schreiben Sie mir →</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .ueber {
+    padding-top: clamp(4rem, 3rem + 7vw, 8rem);
+  }
+  .ueber__eyebrow {
+    color: var(--color-taupe);
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  .ueber__titel {
+    margin: 0;
+    max-width: 18ch;
+  }
+  .ueber__intro {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 1.6rem 3rem;
+    color: var(--color-tinte-weich);
+    max-width: 64rem;
+  }
+
+  .haltung {
+    margin-top: var(--raum-sektion);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: clamp(2rem, 4vw, 3.5rem);
+    padding-top: clamp(2.5rem, 5vw, 4rem);
+    border-top: 1px solid var(--color-linie);
+  }
+  .haltung__nr {
+    display: block;
+    color: var(--color-taupe);
+    margin-bottom: 1.2rem;
+  }
+  .haltung__titel {
+    margin: 0 0 0.8rem;
+  }
+  .haltung__text {
+    color: var(--color-tinte-weich);
+  }
+
+  .signatur {
+    margin-top: var(--raum-sektion);
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    align-items: flex-start;
+  }
+  .signatur__bild {
+    width: clamp(170px, 22vw, 230px);
+    height: auto;
+    opacity: 0.9;
+  }
+  .signatur__zeile {
+    font-size: var(--text-lede);
+    color: var(--color-tinte);
+  }
+  .signatur__zeile a {
+    margin-left: 0.5rem;
+    font-weight: 700;
+  }
+</style>

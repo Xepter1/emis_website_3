@@ -1,0 +1,132 @@
+---
+/**
+ * CURSOR — eine genau dosierte Signatur des Rahmens.
+ * Ein ruhiger Ring, der dem Zeiger sanft folgt und sich über Interaktivem öffnet.
+ * Nur an Geräten mit feinem Zeiger; respektiert prefers-reduced-motion.
+ * Persistiert über Seitenwechsel (Teil des Rahmens).
+ */
+---
+
+<div id="emi-cursor" class="cursor" aria-hidden="true" transition:persist="emi-cursor">
+  <div class="cursor__ring"></div>
+  <div class="cursor__punkt"></div>
+</div>
+
+<style>
+  .cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    pointer-events: none;
+    mix-blend-mode: normal;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .cursor.ist-aktiv {
+    opacity: 1;
+  }
+  .cursor__ring {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    margin: -17px 0 0 -17px;
+    border: 1.5px solid var(--welt-tinte, var(--color-tinte));
+    border-radius: 50%;
+    transition:
+      width 0.4s var(--ease-ruhig),
+      height 0.4s var(--ease-ruhig),
+      margin 0.4s var(--ease-ruhig),
+      background-color 0.4s var(--ease-ruhig),
+      opacity 0.3s ease;
+    will-change: transform;
+  }
+  .cursor__punkt {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    margin: -2px 0 0 -2px;
+    background: var(--welt-akzent, var(--color-tinte));
+    border-radius: 50%;
+    will-change: transform;
+  }
+  /* Über Interaktivem: Ring öffnet sich, Punkt verschwindet. */
+  .cursor.ist-hover .cursor__ring {
+    width: 58px;
+    height: 58px;
+    margin: -29px 0 0 -29px;
+    background: color-mix(in oklab, var(--welt-tinte, var(--color-tinte)) 8%, transparent);
+  }
+  .cursor.ist-hover .cursor__punkt {
+    opacity: 0;
+  }
+  .cursor.ist-druck .cursor__ring {
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+  }
+
+  /* Nur feiner Zeiger + keine Bewegungsreduktion */
+  @media (hover: none), (pointer: coarse) {
+    .cursor { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { display: none; }
+  }
+</style>
+
+<script>
+  // Einmalig initialisieren — überlebt View Transitions (document bleibt bestehen).
+  (() => {
+    const w = window as any;
+    if (w.__emiCursorInit) return;
+    const feinerZeiger = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const ruhig = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!feinerZeiger || ruhig) return;
+    w.__emiCursorInit = true;
+
+    let ziel = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let ring = { ...ziel };
+    let sichtbar = false;
+
+    const el = () => document.getElementById("emi-cursor");
+    const ringEl = () => el()?.querySelector<HTMLElement>(".cursor__ring");
+    const punktEl = () => el()?.querySelector<HTMLElement>(".cursor__punkt");
+
+    window.addEventListener("pointermove", (e) => {
+      ziel.x = e.clientX;
+      ziel.y = e.clientY;
+      if (!sichtbar) {
+        sichtbar = true;
+        el()?.classList.add("ist-aktiv");
+      }
+    });
+    window.addEventListener("pointerdown", () => el()?.classList.add("ist-druck"));
+    window.addEventListener("pointerup", () => el()?.classList.remove("ist-druck"));
+    document.addEventListener("mouseleave", () => el()?.classList.remove("ist-aktiv"));
+
+    // Delegierte Hover-Erkennung — funktioniert auch nach Seitenwechseln.
+    const interaktiv = "a, button, [data-cursor], input, textarea, label[for]";
+    window.addEventListener("pointerover", (e) => {
+      const t = e.target as Element;
+      if (t?.closest?.(interaktiv)) el()?.classList.add("ist-hover");
+    });
+    window.addEventListener("pointerout", (e) => {
+      const t = e.target as Element;
+      if (t?.closest?.(interaktiv)) el()?.classList.remove("ist-hover");
+    });
+
+    // Sanftes Nachlaufen des Rings, Punkt exakt am Zeiger.
+    const lerp = (a: number, b: number, n: number) => a + (b - a) * n;
+    const tick = () => {
+      ring.x = lerp(ring.x, ziel.x, 0.18);
+      ring.y = lerp(ring.y, ziel.y, 0.18);
+      const r = ringEl();
+      const p = punktEl();
+      if (r) r.style.transform = `translate(${ring.x}px, ${ring.y}px)`;
+      if (p) p.style.transform = `translate(${ziel.x}px, ${ziel.y}px)`;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  })();
+</script>

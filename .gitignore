@@ -1,0 +1,17 @@
+# build output
+dist/
+# astro
+.astro/
+# deps
+node_modules/
+# generated
+.fontstage/
+# env
+.env
+.env.production
+# macOS
+.DS_Store
+# lokale Tooling-/Vorschau-Konfiguration
+.claude/
+# logs
+npm-debug.log*

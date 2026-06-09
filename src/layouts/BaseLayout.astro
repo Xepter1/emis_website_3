@@ -1,0 +1,172 @@
+---
+import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Cursor from "../components/Cursor.astro";
+
+/**
+ * BASELAYOUT — der heilige Rahmen. Head/Meta, Navigation, Footer, Cursor,
+ * seitenübergreifende View Transitions. Ändert sich nie.
+ *
+ * Projektwelten reichen `welt` herein: die --welt-* Variablen landen auf <body>,
+ * sodass Inhalt UND Cursor sich umfärben — der Rahmen (Nav/Footer) bleibt fix.
+ */
+interface Welt {
+  papier: string;
+  tinte: string;
+  akzent: string;
+  sekundaer?: string;
+  linie?: string;
+  stimmung?: "hell" | "dunkel";
+}
+
+interface Props {
+  titel: string;
+  beschreibung: string;
+  ogBild?: string;
+  seitentyp?: "website" | "article";
+  welt?: Welt;
+}
+
+const {
+  titel,
+  beschreibung,
+  ogBild = "/brand/og-default.png",
+  seitentyp = "website",
+  welt,
+} = Astro.props;
+
+const kanonisch = new URL(Astro.url.pathname, Astro.site).href;
+const ogAbsolut = new URL(ogBild, Astro.site).href;
+
+// Weltfarben → Inline-Variablen auf <body>. Ohne Welt greifen die Rahmen-Defaults.
+const bodyStyle = welt
+  ? [
+      `--welt-papier:${welt.papier}`,
+      `--welt-tinte:${welt.tinte}`,
+      `--welt-akzent:${welt.akzent}`,
+      welt.sekundaer ? `--welt-sekundaer:${welt.sekundaer}` : "",
+      welt.linie ? `--welt-linie:${welt.linie}` : "",
+    ]
+      .filter(Boolean)
+      .join(";")
+  : undefined;
+---
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Vor dem ersten Paint: markiert, dass JS läuft. Reveal-Effekte verstecken
+         Inhalt nur dann (ohne JS bleibt alles sichtbar). -->
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="icon" type="image/png" href="/brand/favicon.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{titel}</title>
+    <meta name="description" content={beschreibung} />
+    <link rel="canonical" href={kanonisch} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={seitentyp} />
+    <meta property="og:title" content={titel} />
+    <meta property="og:description" content={beschreibung} />
+    <meta property="og:url" content={kanonisch} />
+    <meta property="og:image" content={ogAbsolut} />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:site_name" content="EMS Design" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={titel} />
+    <meta name="twitter:description" content={beschreibung} />
+    <meta name="twitter:image" content={ogAbsolut} />
+
+    <!-- Schrift vorab laden: die zwei tragenden Schnitte -->
+    <link
+      rel="preload"
+      href="/fonts/AvantGarde-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/AvantGarde-Bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <ClientRouter />
+  </head>
+
+  <body style={bodyStyle} data-stimmung={welt?.stimmung ?? "hell"}>
+    <a href="#inhalt" class="skip-link">Zum Inhalt springen</a>
+
+    <Nav />
+
+    <main id="inhalt" class="seite">
+      <slot />
+    </main>
+
+    <Footer />
+
+    <Cursor />
+
+    <script>
+      // Scroll-Reveal — initialisiert bei jedem Seitenaufbau (auch nach
+      // View Transitions). Respektiert prefers-reduced-motion.
+      function initReveal() {
+        const ruhig = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const els = document.querySelectorAll<HTMLElement>(
+          "[data-reveal]:not(.ist-sichtbar)",
+        );
+        if (ruhig || !("IntersectionObserver" in window)) {
+          els.forEach((e) => e.classList.add("ist-sichtbar"));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const en of entries) {
+              if (en.isIntersecting) {
+                en.target.classList.add("ist-sichtbar");
+                io.unobserve(en.target);
+              }
+            }
+          },
+          { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
+        );
+        els.forEach((e) => io.observe(e));
+      }
+      document.addEventListener("astro:page-load", initReveal);
+    </script>
+
+    <style>
+      .seite {
+        padding-top: var(--nav-h);
+        min-height: 70vh;
+      }
+      .skip-link {
+        position: fixed;
+        top: 0.5rem;
+        left: 0.5rem;
+        z-index: 1000;
+        padding: 0.7rem 1.1rem;
+        background: var(--color-tinte);
+        color: var(--color-papier);
+        font-size: var(--text-klein);
+        font-weight: 700;
+        border-radius: 4px;
+        transform: translateY(-160%);
+        transition: transform 0.3s var(--ease-prazise);
+      }
+      .skip-link:focus-visible {
+        transform: translateY(0);
+      }
+    </style>
+  </body>
+</html>

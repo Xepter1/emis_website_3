@@ -1,0 +1,118 @@
+---
+/**
+ * FOOTER — Teil des heiligen Rahmens. Ruhiger Abschluss, immer gleich.
+ * Trägt Emis Unterschrift als persönliches Siegel.
+ */
+import { site } from "../site";
+const email = site.email;
+const marke = site.brand;
+const jahr = new Date().getFullYear();
+---
+
+<footer class="rahmen-footer">
+  <div class="huelle">
+    <div class="rahmen-footer__cta">
+      <p class="eyebrow" style="color: var(--color-taupe)">Kontakt</p>
+      <a href="/kontakt" class="rahmen-footer__zeile">
+        Lassen Sie uns etwas<br />Bleibendes bauen.
+      </a>
+      <a href={`mailto:${email}`} class="rahmen-footer__mail link-unterstrich">
+        {email}
+      </a>
+    </div>
+
+    <div class="rahmen-footer__unten">
+      <div class="rahmen-footer__signatur">
+        <img
+          src="/brand/emi-signatur-dunkel.png"
+          alt="Handschriftliche Unterschrift von Emi"
+          width="180"
+          height="75"
+          loading="lazy"
+        />
+      </div>
+
+      <nav class="rahmen-footer__nav" aria-label="Footer-Navigation">
+        <a href="/" class="link-unterstrich">Projekte</a>
+        <a href="/ueber" class="link-unterstrich">Über</a>
+        <a href="/kontakt" class="link-unterstrich">Kontakt</a>
+      </nav>
+
+      <p class="rahmen-footer__klein caption">
+        © {jahr} {marke} · Grafikdesign
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .rahmen-footer {
+    background: var(--color-papier);
+    border-top: 1px solid var(--color-linie);
+    padding-block: clamp(4rem, 2rem + 8vw, 9rem) 2.5rem;
+    margin-top: var(--raum-sektion);
+  }
+
+  .rahmen-footer__cta {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    padding-bottom: clamp(3rem, 6vw, 6rem);
+  }
+  .rahmen-footer__zeile {
+    font-size: var(--text-display);
+    font-weight: 700;
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    max-width: 16ch;
+    transition: opacity 0.4s var(--ease-ruhig);
+  }
+  .rahmen-footer__zeile:hover {
+    opacity: 0.55;
+  }
+  .rahmen-footer__mail {
+    font-size: var(--text-lede);
+    font-weight: 400;
+    width: fit-content;
+    color: var(--color-tinte-weich);
+  }
+
+  .rahmen-footer__unten {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 2rem 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--color-linie-zart);
+  }
+  .rahmen-footer__signatur {
+    grid-column: 1;
+  }
+  .rahmen-footer__signatur img {
+    width: clamp(140px, 16vw, 200px);
+    height: auto;
+    opacity: 0.9;
+  }
+  .rahmen-footer__nav {
+    grid-column: 2;
+    display: flex;
+    gap: 1.6rem;
+    font-size: var(--text-klein);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .rahmen-footer__klein {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .rahmen-footer__unten {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    .rahmen-footer__nav {
+      grid-column: 1;
+    }
+  }
+</style>

@@ -49,6 +49,47 @@ Netlify, Vercel, Cloudflare Pages u. ä.
 
 ---
 
+## Deployment mit Docker / Portainer
+
+Die Seite läuft als winziges **Nginx-Image**, das die statischen Dateien
+ausliefert (mehrstufiges `Dockerfile`: Node baut → Nginx serviert `dist/`).
+
+**Automatischer Image-Build (GitHub Actions → GHCR).**
+Bei jedem Push auf `main` baut `.github/workflows/docker.yml` das Image und
+pusht es nach `ghcr.io/xepter1/emis_website_3:latest`.
+
+**Einmalig: GHCR-Paket sichtbar machen.**
+Nach dem ersten erfolgreichen Workflow-Lauf, damit Portainer ohne Login ziehen
+kann: GitHub → Repo → „Packages" → `emis_website_3` → „Package settings" →
+„Change visibility" → **Public**.
+(Alternativ in Portainer eine GHCR-Registry mit einem Token mit `read:packages`
+hinterlegen — dann darf das Paket privat bleiben.)
+
+**In Portainer (Stack).**
+1. Stacks → „Add stack" → Inhalt von `docker-compose.yml` einfügen — oder in
+   einem bestehenden Stack das Image `ghcr.io/xepter1/emis_website_3:latest`
+   als Service eintragen.
+2. Host-Port unter `ports` auf einen freien Wert setzen (Standard `8087:80`)
+   oder die Seite per Reverse-Proxy / Labels einbinden.
+3. „Deploy the stack".
+
+**Updates = „Pull and redeploy".**
+Künftig: committen + auf `main` pushen → Actions baut das Image neu → in
+Portainer am Stack **„Pull and redeploy"** drücken (zieht `:latest` neu und
+startet den Container). Mehr ist nicht nötig.
+
+> Eigene Domain: vorher `site` in `astro.config.mjs` setzen — das Image wird
+> beim nächsten Push automatisch neu gebaut.
+
+**Lokal testen (optional):**
+
+```bash
+docker build -t emis-website .
+docker run --rm -p 8087:80 emis-website   # → http://localhost:8087
+```
+
+---
+
 ## Ein neues Projekt anlegen (ohne Code)
 
 Jedes Projekt ist **ein Ordner** unter `src/content/projekte/`.

@@ -1,0 +1,19 @@
+# Portainer-Stack für die Emi-Website.
+#
+# Das Image wird von GitHub Actions bei jedem Push auf main automatisch nach
+# GHCR gebaut (siehe .github/workflows/docker.yml). In Portainer genügt danach
+# der Knopf „Pull and redeploy", um die neueste Version zu ziehen.
+#
+# Hinweis: Damit Portainer das Image ohne Login ziehen kann, das GHCR-Paket
+# einmalig auf „public" stellen (GitHub → Repo → Packages → Package settings),
+# oder in Portainer eine GHCR-Registry mit Token hinterlegen. Details: README.
+
+services:
+  emis-website:
+    image: ghcr.io/xepter1/emis_website_3:latest
+    container_name: emis-website
+    restart: unless-stopped
+    ports:
+      # Host-Port:Container-Port — linken Wert auf einen freien Port setzen
+      # (oder weglassen und stattdessen per Reverse-Proxy / Labels einbinden).
+      - "8087:80"

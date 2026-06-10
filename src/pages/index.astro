@@ -18,8 +18,7 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
 >
   <!-- ====================== HERO ====================== -->
   <section class="hero huelle">
-    <p class="hero__eyebrow eyebrow" data-reveal>Grafikdesignerin</p>
-    <h1 class="hero__logo" data-reveal style="--reveal-delay:.08s">
+    <h1 class="hero__logo" data-reveal>
       <img
         src="/brand/emi-logo.png"
         alt="EMS Design, Grafikdesign von Emi"
@@ -28,14 +27,12 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
         fetchpriority="high"
       />
     </h1>
-    <a class="hero__cue" href="#werke" data-reveal style="--reveal-delay:.28s">
-      <span class="eyebrow">Projekte</span>
-      <span class="hero__pfeil" aria-hidden="true"></span>
-    </a>
   </section>
 
   <!-- ====================== WERKE ====================== -->
   <section id="werke" class="werke huelle" aria-label="Projekte">
+    <p class="werke__label eyebrow" data-reveal>Projekte</p>
+    <div class="werke__liste">
     {
       projekte.map((p, i) => {
         const welt = p.data.welt;
@@ -46,17 +43,43 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
         ].join(";");
 
         if (p.data.status === "in-arbeit") {
+          const aktion = p.data.aktion;
+          const meta = (
+            <div class="werk__meta">
+              <span class="werk__nr eyebrow ziffern-tab">{nr(i)}</span>
+              <h2 class="werk__titel display">{p.data.titel}</h2>
+              <p class="werk__diszi eyebrow">{p.data.disziplin.join("  ·  ")}</p>
+              <p class="werk__text fliesstext">{p.data.kurzbeschreibung}</p>
+            </div>
+          );
+
+          // Einladungs-Slot: anklickbar, führt direkt zum Ziel (z. B. Kontakt).
+          if (aktion) {
+            return (
+              <a
+                class="werk werk--leer werk--einladung"
+                href={aktion.href}
+                style={weltVars}
+                aria-label={aktion.label}
+                data-reveal
+              >
+                <div class="werk__media werk__media--leer werk__media--einladung">
+                  <span class="werk__leer-label werk__einladung-cta">
+                    {aktion.label}
+                    <span class="werk__cta-pfeil" aria-hidden="true" />
+                  </span>
+                </div>
+                {meta}
+              </a>
+            );
+          }
+
           return (
             <div class="werk werk--leer" style={weltVars} data-reveal>
               <div class="werk__media werk__media--leer" aria-hidden="true">
                 <span class="werk__leer-label eyebrow">In Arbeit</span>
               </div>
-              <div class="werk__meta">
-                <span class="werk__nr eyebrow ziffern-tab">{nr(i)}</span>
-                <h2 class="werk__titel display">{p.data.titel}</h2>
-                <p class="werk__diszi eyebrow">{p.data.disziplin.join("  ·  ")}</p>
-                <p class="werk__text fliesstext">{p.data.kurzbeschreibung}</p>
-              </div>
+              {meta}
             </div>
           );
         }
@@ -90,6 +113,7 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
         );
       })
     }
+    </div>
   </section>
 </BaseLayout>
 
@@ -98,10 +122,6 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
   .hero {
     padding-top: clamp(4rem, 3rem + 8vw, 9rem);
     padding-bottom: clamp(3rem, 2rem + 6vw, 7rem);
-  }
-  .hero__eyebrow {
-    color: var(--color-taupe);
-    margin-bottom: clamp(1.5rem, 4vw, 3rem);
   }
   /* Das ganze Logo, sehr groß — die Eröffnung der Seite. */
   .hero__logo {
@@ -112,41 +132,20 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
     width: min(100%, 70rem);
     height: auto;
   }
-  .hero__cue {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin-top: clamp(2.5rem, 5vw, 4rem);
-    color: var(--color-taupe);
-    transition: color 0.4s var(--ease-ruhig);
-  }
-  .hero__cue:hover {
-    color: var(--color-tinte);
-  }
-  .hero__pfeil {
-    width: 1px;
-    height: 2.4rem;
-    background: currentColor;
-    position: relative;
-  }
-  .hero__pfeil::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 6px;
-    height: 6px;
-    border-right: 1px solid currentColor;
-    border-bottom: 1px solid currentColor;
-    transform: translateX(-50%) rotate(45deg);
-  }
 
   /* ---------------- WERKE ---------------- */
   .werke {
+    /* etwas mehr Luft nach dem Logo, bevor die Projekte beginnen */
+    padding-top: clamp(4rem, 3rem + 7vw, 9rem);
+  }
+  .werke__label {
+    color: var(--color-taupe);
+    margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  }
+  .werke__liste {
     display: flex;
     flex-direction: column;
     gap: var(--raum-sektion);
-    padding-top: var(--raum-block);
   }
 
   .werk {
@@ -208,6 +207,46 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
   }
   .werk--leer .werk__titel {
     color: var(--color-tinte-weich);
+  }
+
+  /* Einladungs-Slot: derselbe Platzhalter, aber anklickbar und einladend. */
+  .werk--einladung {
+    opacity: 1;
+    color: var(--color-tinte);
+  }
+  .werk__media--einladung {
+    cursor: pointer;
+  }
+  /* Die CTA-Pille im Platzhalter — klar als Aufforderung lesbar. */
+  .werk__einladung-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--w-tinte, var(--color-tinte));
+    opacity: 1;
+    font-size: var(--text-klein);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    background: color-mix(in oklab, var(--w-papier, var(--color-papier)) 70%, transparent);
+    border-color: color-mix(in oklab, var(--w-tinte, #000) 38%, transparent);
+    transition:
+      background-color 0.4s var(--ease-ruhig),
+      color 0.4s var(--ease-ruhig);
+  }
+  .werk--einladung:hover .werk__einladung-cta {
+    background: var(--w-tinte, var(--color-tinte));
+    color: var(--w-papier, var(--color-papier));
+  }
+  .werk--einladung:hover .werk__cta-pfeil {
+    width: 2.6rem;
+  }
+  .werk--einladung .werk__titel {
+    color: var(--color-tinte-weich);
+    transition: color 0.4s var(--ease-ruhig);
+  }
+  .werk--einladung:hover .werk__titel {
+    color: var(--w-akzent, var(--color-tinte));
   }
 
   .werk__meta {

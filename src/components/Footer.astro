@@ -13,9 +13,6 @@ const jahr = new Date().getFullYear();
   <div class="huelle">
     <div class="rahmen-footer__cta">
       <p class="eyebrow" style="color: var(--color-taupe)">Kontakt</p>
-      <a href="/kontakt" class="rahmen-footer__zeile">
-        Lassen Sie uns etwas<br />Bleibendes bauen.
-      </a>
       <a href={`mailto:${email}`} class="rahmen-footer__mail link-unterstrich">
         {email}
       </a>
@@ -34,7 +31,7 @@ const jahr = new Date().getFullYear();
 
       <nav class="rahmen-footer__nav" aria-label="Footer-Navigation">
         <a href="/" class="link-unterstrich">Projekte</a>
-        <a href="/ueber" class="link-unterstrich">Über</a>
+        <a href="/ueber" class="link-unterstrich">Über mich</a>
         <a href="/kontakt" class="link-unterstrich">Kontakt</a>
       </nav>
 
@@ -58,17 +55,6 @@ const jahr = new Date().getFullYear();
     flex-direction: column;
     gap: 1.4rem;
     padding-bottom: clamp(3rem, 6vw, 6rem);
-  }
-  .rahmen-footer__zeile {
-    font-size: var(--text-display);
-    font-weight: 700;
-    line-height: 0.98;
-    letter-spacing: -0.02em;
-    max-width: 16ch;
-    transition: opacity 0.4s var(--ease-ruhig);
-  }
-  .rahmen-footer__zeile:hover {
-    opacity: 0.55;
   }
   .rahmen-footer__mail {
     font-size: var(--text-lede);

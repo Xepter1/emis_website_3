@@ -10,7 +10,7 @@ const istAktiv = (href: string) =>
 
 const punkte = [
   { href: "/", label: "Projekte" },
-  { href: "/ueber", label: "Über" },
+  { href: "/ueber", label: "Über mich" },
   { href: "/kontakt", label: "Kontakt" },
 ];
 ---
@@ -113,3 +113,24 @@ const punkte = [
     color: var(--color-tinte);
   }
 </style>
+
+<script>
+  // Die Nav persistiert über View Transitions (transition:persist) und wird
+  // dabei NICHT neu gerendert — die serverseitig gesetzte Markierung bliebe
+  // sonst auf der zuvor besuchten Seite stehen. Darum nach jedem Seitenaufbau
+  // den aktiven Punkt anhand des aktuellen Pfads neu bestimmen.
+  function markiereAktivenPunkt() {
+    const pfad = location.pathname;
+    const istAktiv = (href: string) =>
+      href === "/" ? pfad === "/" : pfad.startsWith(href);
+    document
+      .querySelectorAll<HTMLAnchorElement>(".rahmen-nav .navlink")
+      .forEach((a) => {
+        const aktiv = istAktiv(new URL(a.href).pathname);
+        a.classList.toggle("navlink--aktiv", aktiv);
+        if (aktiv) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      });
+  }
+  document.addEventListener("astro:page-load", markiereAktivenPunkt);
+</script>

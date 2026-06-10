@@ -17,7 +17,7 @@ const projekte = defineCollection({
     z.object({
       // — Pflicht-Kerndaten —
       titel: z.string(),
-      kunde: z.string(),
+      kunde: z.string().optional(), // optional — nicht jedes Projekt nennt einen Kunden
       jahr: z.union([z.string(), z.number()]).transform(String),
       disziplin: z.array(z.string()), // z.B. ["Corporate Design", "Logo"]
       kurzbeschreibung: z.string(), // 1–2 Sätze (Übersicht + Meta)
@@ -27,9 +27,23 @@ const projekte = defineCollection({
       status: z.enum(["live", "in-arbeit"]).default("live"),
       ausgezeichnet: z.boolean().default(false), // Hero-Slot auf der Startseite
 
+      // — Optionaler Handlungsaufruf — verwandelt einen „in-arbeit"-Platzhalter
+      //   in eine anklickbare Einladung (z. B. „Probegespräch vereinbaren" → /kontakt).
+      aktion: z
+        .object({
+          label: z.string(), // Text im Platzhalter (statt „In Arbeit")
+          href: z.string(), // Ziel, z. B. "/kontakt"
+        })
+        .optional(),
+
       // — Übersichtsbild — (Pflicht für live; Platzhalter dürfen ohne)
       cover: image().optional(),
       coverFokus: z.string().optional(), // object-position, z.B. "center 30%"
+
+      // — Optionales Hero-Triptychon — zwei Bilder [links, rechts] neben dem
+      //   Cover (= Mitte, morpht aus der Übersicht). Fehlt es, bleibt der
+      //   klassische große Hero. Vorerst nur bei CoffeeCats aktiv.
+      heroSeiten: z.array(image()).length(2).optional(),
 
       // — Die Farben der Projektwelt (Brief Abschnitt 5 & 6) —
       welt: z.object({

@@ -18,30 +18,17 @@ const { email } = site;
     <div class="kontakt__kopf">
       <p class="eyebrow kontakt__eyebrow" data-reveal>Kontakt</p>
       <h1 class="kontakt__titel display" data-reveal style="--reveal-delay:.05s">
-        Erzählen Sie mir<br />von Ihrer Marke.
+        Erzähl mir<br />von deiner Vision.
       </h1>
       <p class="kontakt__lede lede" data-reveal style="--reveal-delay:.14s">
-        Ob erste Idee oder fertiges Briefing, schreiben Sie mir. Am liebsten
-        direkt:
+        Ob erste Idee oder fertiges Briefing, schreiben Sie mir.
       </p>
-      <a
-        href={`mailto:${email}`}
-        class="kontakt__mail link-unterstrich"
-        data-reveal
-        style="--reveal-delay:.2s"
-      >
-        {email}
-      </a>
     </div>
 
     <form class="kontakt__form" id="kontaktform" data-email={email} data-reveal style="--reveal-delay:.1s">
       <div class="feld">
         <label for="name" class="eyebrow">Name</label>
         <input id="name" name="name" type="text" autocomplete="name" required />
-      </div>
-      <div class="feld">
-        <label for="email" class="eyebrow">Mail</label>
-        <input id="email" name="email" type="email" autocomplete="email" required />
       </div>
       <div class="feld">
         <label for="nachricht" class="eyebrow">Nachricht</label>
@@ -77,13 +64,6 @@ const { email } = site;
   .kontakt__lede {
     margin-top: clamp(1.5rem, 3vw, 2.2rem);
     color: var(--color-tinte-weich);
-  }
-  .kontakt__mail {
-    display: inline-block;
-    margin-top: 1rem;
-    font-size: var(--text-titel);
-    font-weight: 700;
-    letter-spacing: -0.01em;
   }
 
   /* Formular — schlank, ruhig, Linien statt Kästen. */
@@ -184,10 +164,9 @@ const { email } = site;
       const wert = (id: string) =>
         (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement)?.value.trim() ?? "";
       const name = wert("name");
-      const von = wert("email");
       const text = wert("nachricht");
       const betreff = `Anfrage von ${name || "der Website"}`;
-      const koerper = `${text}\n\n${name}\n${von}`;
+      const koerper = `${text}\n\n${name}`;
       window.location.href =
         `mailto:${email}?subject=${encodeURIComponent(betreff)}` +
         `&body=${encodeURIComponent(koerper)}`;

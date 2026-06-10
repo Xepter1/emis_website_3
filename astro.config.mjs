@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite';
 // Hinweis: `site` auf die echte Domain setzen, sobald sie steht.
 // Sie steuert kanonische URLs, Sitemap und absolute Open-Graph-Bildpfade.
 export default defineConfig({
-  site: 'https://emi.design',
+  site: 'https://designbyems.de',
   integrations: [mdx(), sitemap()],
   vite: {
     plugins: [tailwindcss()],

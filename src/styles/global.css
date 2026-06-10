@@ -108,7 +108,6 @@
     scroll-behavior: smooth;
     /* Anker-Sprünge nicht unter die fixe Nav rutschen lassen */
     scroll-padding-top: calc(var(--nav-h) + 1rem);
-    /* eigener Cursor wird per JS aktiviert; Fallback bleibt nativ */
   }
 
   body {

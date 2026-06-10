@@ -11,6 +11,8 @@ node_modules/
 .env.production
 # macOS
 .DS_Store
+# lokales Quellmaterial (Originalbilder), nicht für den Build nötig
+Bilder/
 # lokale Tooling-/Vorschau-Konfiguration
 .claude/
 # logs

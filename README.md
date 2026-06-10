@@ -149,8 +149,8 @@ unter `/projekte/<ordnername>` die eigene Case-Welt mit dem Morph-Übergang.
 `status: in-arbeit` zeigt einen ruhigen, klar markierten Platzhalter-Slot
 (kein Coverbild nötig, keine Case-Seite). Sobald du `cover` + Inhalte ergänzt
 und `status: live` setzt, erscheint die volle Case-Seite von selbst.
-Zwei solche Platzhalter sind aktuell angelegt
-(`in-arbeit-marke/`, `in-arbeit-editorial/`).
+Ein solcher Platzhalter ist aktuell angelegt
+(`in-arbeit-editorial/`).
 
 ---
 

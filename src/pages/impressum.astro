@@ -1,0 +1,115 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { site } from "../site";
+
+// Impressum — Pflichtangaben nach § 5 DDG (Digitale-Dienste-Gesetz, seit Mai
+// 2024 Nachfolger des TMG). Inhaltlich-verantwortlich nach § 18 Abs. 2 MStV.
+// Reiner Rechtstext im ruhigen Galerie-Rahmen, keine Welt-Einfärbung.
+const { email } = site;
+---
+
+<BaseLayout
+  titel="Impressum · EMS Design"
+  beschreibung="Impressum und Anbieterkennzeichnung von EMS Design – Emilia Gassner, Grafikdesign."
+>
+  <section class="recht huelle">
+    <header class="recht__kopf">
+      <p class="eyebrow recht__eyebrow" data-reveal>Rechtliches</p>
+      <h1 class="recht__titel display" data-reveal style="--reveal-delay:.05s">
+        Impressum
+      </h1>
+    </header>
+
+    <div class="recht__inhalt" data-reveal style="--reveal-delay:.1s">
+      <h2 class="recht__h2">Angaben gemäß § 5 DDG</h2>
+      <p class="fliesstext">
+        Emilia Gassner<br />
+        Obere Rettenbachstraße 5<br />
+        84137 Vilsbiburg<br />
+        Deutschland
+      </p>
+
+      <h2 class="recht__h2">Kontakt</h2>
+      <p class="fliesstext">
+        E-Mail:
+        <a href={`mailto:${email}`} class="link-unterstrich">{email}</a>
+      </p>
+
+      <h2 class="recht__h2">Umsatzsteuer</h2>
+      <p class="fliesstext">
+        Als Kleinunternehmerin im Sinne von § 19 UStG wird keine Umsatzsteuer
+        berechnet und folglich nicht ausgewiesen.
+      </p>
+
+      <h2 class="recht__h2">
+        Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
+      </h2>
+      <p class="fliesstext">
+        Emilia Gassner<br />
+        Obere Rettenbachstraße 5<br />
+        84137 Vilsbiburg
+      </p>
+
+      <h2 class="recht__h2">Verbraucherstreitbeilegung</h2>
+      <p class="fliesstext">
+        Ich bin nicht bereit und nicht verpflichtet, an
+        Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle
+        teilzunehmen.
+      </p>
+
+      <h2 class="recht__h2">Haftung für Inhalte</h2>
+      <p class="fliesstext">
+        Als Diensteanbieterin bin ich gemäß § 7 Abs. 1 DDG für eigene Inhalte
+        auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach
+        §§ 8 bis 10 DDG bin ich jedoch nicht verpflichtet, übermittelte oder
+        gespeicherte fremde Informationen zu überwachen oder nach Umständen zu
+        forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
+      </p>
+
+      <h2 class="recht__h2">Haftung für Links</h2>
+      <p class="fliesstext">
+        Diese Website enthält keine Links zu externen Websites Dritter. Sollten
+        künftig solche Links gesetzt werden, übernehme ich für deren Inhalte
+        keine Gewähr; dafür ist stets der jeweilige Anbieter verantwortlich.
+      </p>
+
+      <h2 class="recht__h2">Urheberrecht</h2>
+      <p class="fliesstext">
+        Die auf dieser Website gezeigten Arbeiten, Texte und Bilder unterliegen
+        dem deutschen Urheberrecht. Jede Verwertung außerhalb der Grenzen des
+        Urheberrechts bedarf der vorherigen schriftlichen Zustimmung.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .recht {
+    padding-top: clamp(4rem, 3rem + 7vw, 8rem);
+    max-width: 760px;
+  }
+  .recht__eyebrow {
+    color: var(--color-taupe);
+    margin-bottom: clamp(1rem, 3vw, 1.6rem);
+  }
+  .recht__titel {
+    margin: 0;
+  }
+  .recht__inhalt {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    color: var(--color-tinte-weich);
+  }
+  .recht__h2 {
+    font-size: var(--text-lede);
+    font-weight: 700;
+    letter-spacing: -0.004em;
+    color: var(--color-tinte);
+    margin: clamp(2rem, 4vw, 3rem) 0 0.8rem;
+  }
+  .recht__inhalt > .recht__h2:first-child {
+    margin-top: 0;
+  }
+  .recht__inhalt .fliesstext {
+    max-width: 68ch;
+  }
+</style>

@@ -1,0 +1,162 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { site } from "../site";
+
+// Datenschutzerklärung — DSGVO Art. 13. Bewusst schlank, weil die Seite kein
+// Tracking, keine Cookies und keine externen Dienste einbindet. Verarbeitet
+// werden nur Server-Logfiles (Hetzner) und eine etwaige Kontaktaufnahme.
+const { email } = site;
+---
+
+<BaseLayout
+  titel="Datenschutzerklärung · EMS Design"
+  beschreibung="Datenschutzerklärung von EMS Design – welche Daten beim Besuch dieser Website verarbeitet werden und Ihre Rechte nach der DSGVO."
+>
+  <section class="recht huelle">
+    <header class="recht__kopf">
+      <p class="eyebrow recht__eyebrow" data-reveal>Rechtliches</p>
+      <h1 class="recht__titel display" data-reveal style="--reveal-delay:.05s">
+        Datenschutz&shy;erklärung
+      </h1>
+    </header>
+
+    <div class="recht__inhalt" data-reveal style="--reveal-delay:.1s">
+      <h2 class="recht__h2">1. Datenschutz auf einen Blick</h2>
+      <p class="fliesstext">
+        Der Schutz Ihrer persönlichen Daten ist mir wichtig. Diese Website
+        setzt <strong>keine Cookies</strong>, kein Tracking, keine Analyse-Tools
+        und keine externen Dienste wie Google Fonts oder Social-Media-Plugins
+        ein. Schriften werden direkt von diesem Server ausgeliefert. Es werden
+        nur die Daten verarbeitet, die für den technischen Betrieb der Seite
+        unvermeidbar sind, sowie Daten, die Sie mir bei einer Kontaktaufnahme
+        selbst übermitteln.
+      </p>
+
+      <h2 class="recht__h2">2. Verantwortliche Stelle</h2>
+      <p class="fliesstext">
+        Verantwortlich für die Datenverarbeitung auf dieser Website ist:
+      </p>
+      <p class="fliesstext">
+        Emilia Gassner<br />
+        Obere Rettenbachstraße 5<br />
+        84137 Vilsbiburg<br />
+        Deutschland<br />
+        E-Mail:
+        <a href={`mailto:${email}`} class="link-unterstrich">{email}</a>
+      </p>
+
+      <h2 class="recht__h2">3. Hosting</h2>
+      <p class="fliesstext">
+        Diese Website wird bei der Hetzner Online GmbH, Industriestr. 25, 91710
+        Gunzenhausen, Deutschland, gehostet. Die Server stehen in Deutschland.
+        Hetzner verarbeitet die nachfolgend beschriebenen Server-Logfiles in
+        meinem Auftrag; hierzu besteht ein Vertrag über Auftragsverarbeitung
+        (Art. 28 DSGVO). Rechtsgrundlage ist mein berechtigtes Interesse an
+        einer sicheren und zuverlässigen Bereitstellung der Website (Art. 6
+        Abs. 1 lit. f DSGVO).
+      </p>
+
+      <h2 class="recht__h2">4. Server-Logfiles</h2>
+      <p class="fliesstext">
+        Beim Aufruf dieser Website erhebt der Hosting-Anbieter automatisch
+        Informationen, die Ihr Browser übermittelt, und speichert sie in
+        sogenannten Server-Logfiles. Das sind insbesondere:
+      </p>
+      <ul class="recht__liste fliesstext">
+        <li>gekürzte oder anonymisierte IP-Adresse</li>
+        <li>Datum und Uhrzeit des Zugriffs</li>
+        <li>aufgerufene Seite bzw. Datei</li>
+        <li>verwendeter Browser und Betriebssystem</li>
+        <li>Referrer-URL (zuvor besuchte Seite)</li>
+      </ul>
+      <p class="fliesstext">
+        Diese Daten werden nicht mit anderen Datenquellen zusammengeführt und
+        dienen ausschließlich dem technischen Betrieb, der Sicherheit und der
+        Stabilität der Website. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.
+        Die Logfiles werden nach kurzer Zeit automatisch gelöscht.
+      </p>
+
+      <h2 class="recht__h2">5. Kontaktaufnahme</h2>
+      <p class="fliesstext">
+        Wenn Sie mir per E-Mail schreiben – auch über das Kontaktformular, das
+        lediglich Ihr eigenes E-Mail-Programm mit vorausgefüllter Nachricht
+        öffnet – verarbeite ich die von Ihnen mitgeteilten Daten (z. B. Name,
+        E-Mail-Adresse, Inhalt der Nachricht), um Ihre Anfrage zu beantworten.
+        Es werden dabei keine Daten an den Webseiten-Server übertragen; der
+        Versand erfolgt über Ihr eigenes E-Mail-Postfach. Rechtsgrundlage ist
+        Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen) bzw. lit. f
+        (Beantwortung Ihrer Anfrage). Ihre Anfrage und die zugehörigen Daten
+        bewahre ich auf, bis der Zweck entfällt, und lösche sie anschließend,
+        sofern keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
+      </p>
+
+      <h2 class="recht__h2">6. SSL-/TLS-Verschlüsselung</h2>
+      <p class="fliesstext">
+        Diese Website nutzt aus Sicherheitsgründen eine SSL-/TLS-Verschlüsselung.
+        Eine verschlüsselte Verbindung erkennen Sie am „https://“ in der
+        Adresszeile Ihres Browsers.
+      </p>
+
+      <h2 class="recht__h2">7. Ihre Rechte</h2>
+      <p class="fliesstext">
+        Sie haben jederzeit das Recht auf Auskunft über Ihre gespeicherten
+        personenbezogenen Daten (Art. 15 DSGVO), auf Berichtigung (Art. 16),
+        Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
+        Datenübertragbarkeit (Art. 20) sowie ein Widerspruchsrecht (Art. 21).
+        Wenden Sie sich dazu an die oben genannte verantwortliche Stelle.
+      </p>
+
+      <h2 class="recht__h2">8. Beschwerderecht bei der Aufsichtsbehörde</h2>
+      <p class="fliesstext">
+        Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu
+        beschweren. Zuständig ist das Bayerische Landesamt für
+        Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach.
+      </p>
+
+      <p class="caption recht__stand">Stand: Juni 2026</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .recht {
+    padding-top: clamp(4rem, 3rem + 7vw, 8rem);
+    max-width: 760px;
+  }
+  .recht__eyebrow {
+    color: var(--color-taupe);
+    margin-bottom: clamp(1rem, 3vw, 1.6rem);
+  }
+  .recht__titel {
+    margin: 0;
+  }
+  .recht__inhalt {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    color: var(--color-tinte-weich);
+  }
+  .recht__h2 {
+    font-size: var(--text-lede);
+    font-weight: 700;
+    letter-spacing: -0.004em;
+    color: var(--color-tinte);
+    margin: clamp(2rem, 4vw, 3rem) 0 0.8rem;
+  }
+  .recht__inhalt > .recht__h2:first-child {
+    margin-top: 0;
+  }
+  .recht__inhalt .fliesstext {
+    max-width: 68ch;
+  }
+  .recht__liste {
+    max-width: 68ch;
+    margin: 0.4rem 0 0;
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .recht__stand {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    color: var(--color-taupe);
+  }
+</style>

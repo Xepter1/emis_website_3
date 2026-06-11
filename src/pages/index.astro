@@ -55,18 +55,31 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
 
           // Einladungs-Slot: anklickbar, führt direkt zum Ziel (z. B. Kontakt).
           if (aktion) {
-            // Mit Vorschaubild: das Bild trägt den Aufruf selbst → zentrierte,
-            // anklickbare Kachel, die direkt zum Ziel (Kontakt) führt.
+            // Mit Vorschaubild: sieht aus wie eine echte Projekt-Karte
+            // (Cover + Meta + Nummer), führt beim Klick aber direkt zum Kontakt.
             if (p.data.cover) {
               return (
-                <a class="werk-cta" href={aktion.href} aria-label={aktion.label} data-reveal>
-                  <Image
-                    src={p.data.cover}
-                    alt={aktion.label}
-                    widths={[400, 600, 900, 1200]}
-                    sizes="(max-width: 700px) 88vw, 32rem"
-                    class="werk-cta__bild"
-                  />
+                <a class="werk" href={aktion.href} style={weltVars} aria-label={aktion.label} data-reveal>
+                  <figure class="werk__media">
+                    <Image
+                      src={p.data.cover}
+                      alt={aktion.label}
+                      widths={[480, 768, 1100, 1500]}
+                      sizes="(max-width: 900px) 92vw, 56vw"
+                      class="werk__bild"
+                      style={`object-position:${p.data.coverFokus ?? "center"}`}
+                    />
+                  </figure>
+                  <div class="werk__meta">
+                    <span class="werk__nr eyebrow ziffern-tab">{nr(i)}</span>
+                    <h2 class="werk__titel display">{p.data.titel}</h2>
+                    <p class="werk__diszi eyebrow">{p.data.disziplin.join("  ·  ")}</p>
+                    <p class="werk__text fliesstext">{p.data.kurzbeschreibung}</p>
+                    <span class="werk__cta">
+                      {aktion.label}
+                      <span class="werk__cta-pfeil" aria-hidden="true" />
+                    </span>
+                  </div>
                 </a>
               );
             }
@@ -263,28 +276,6 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
   }
   .werk--einladung:hover .werk__titel {
     color: var(--w-akzent, var(--color-tinte));
-  }
-
-  /* Einladungs-Kachel mit Vorschaubild: das Bild ist selbst der Aufruf. */
-  .werk-cta {
-    display: block;
-    width: 100%;
-    max-width: 32rem;
-    margin-inline: auto;
-    border-radius: 6px;
-    overflow: hidden;
-    transition:
-      transform 0.6s var(--ease-ruhig),
-      box-shadow 0.6s var(--ease-ruhig);
-  }
-  .werk-cta:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 18px 44px -26px var(--color-tinte);
-  }
-  .werk-cta__bild {
-    width: 100%;
-    height: auto;
-    display: block;
   }
 
   .werk__meta {

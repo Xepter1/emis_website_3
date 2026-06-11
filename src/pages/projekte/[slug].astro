@@ -216,7 +216,7 @@ const ogBild = d.cover?.src;
                       widths={[900, 1400, 2000, 2600]}
                       sizes="100vw"
                       class="block-voll__bild"
-                      data-parallax
+                      {...(a.hoch ? {} : { "data-parallax": true })}
                     />
                   </div>
                   {a.bildunterschrift && (
@@ -502,10 +502,10 @@ const ogBild = d.cover?.src;
     overflow: hidden;
   }
   .block-voll--hoch .block-voll__rahmen {
-    height: auto;
+    /* Definite Höhe (nicht auto) — sonst kollabiert/überläuft der Rahmen,
+       weil das Bild darin height:100% nutzt. */
+    height: clamp(60vh, 50vh + 16vw, 88vh);
     max-height: 92vh;
-    display: grid;
-    place-items: center;
   }
   .block-voll__bild {
     width: 100%;
@@ -513,9 +513,8 @@ const ogBild = d.cover?.src;
     object-fit: cover;
   }
   .block-voll--hoch .block-voll__bild {
-    width: auto;
-    height: 100%;
-    max-width: 100%;
+    /* Hochformat vollständig zeigen: ins Rahmenformat einpassen (zentriert,
+       schmal) statt formatfüllend beschneiden. */
     object-fit: contain;
   }
   .block-voll figcaption {

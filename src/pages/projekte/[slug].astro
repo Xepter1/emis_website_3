@@ -1,28 +1,24 @@
 ---
-import { getCollection } from "astro:content";
-import { Image } from "astro:assets";
+import { getLiveProjekte } from "../../lib/cms";
+import CmsBild from "../../components/CmsBild.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-// Nur live-Projekte bekommen eine Case-Seite. „in-arbeit" bleibt Platzhalter,
-// bis Emi status auf „live" setzt — dann erscheint diese Seite automatisch.
-export async function getStaticPaths() {
-  const live = (await getCollection("projekte"))
-    .filter((p) => p.data.status === "live")
-    .sort((a, b) => a.data.reihenfolge - b.data.reihenfolge);
+// SSR: das Projekt wird live aus dem CMS geholt. Nur live-Projekte bekommen eine
+// Case-Seite. „in-arbeit" bleibt Platzhalter, bis Emi status auf „live" setzt —
+// dann erscheint diese Seite automatisch (sofort, ohne Neu-Build).
+const { slug } = Astro.params;
 
-  return live.map((p, i) => {
-    const naechstes = live[(i + 1) % live.length];
-    return {
-      params: { slug: p.id },
-      props: {
-        p,
-        naechstes: { id: naechstes.id, titel: naechstes.data.titel },
-      },
-    };
-  });
+const live = await getLiveProjekte();
+const index = live.findIndex((x) => x.id === slug);
+
+// Unbekannter Slug oder „in-arbeit" → 404 (Rahmen übernimmt).
+if (index === -1) {
+  return new Response(null, { status: 404, statusText: "Nicht gefunden" });
 }
 
-const { p, naechstes } = Astro.props;
+const p = live[index];
+const naechstesProjekt = live[(index + 1) % live.length];
+const naechstes = { id: naechstesProjekt.id, titel: naechstesProjekt.data.titel };
 const d = p.data;
 
 // Farbwelt als sichtbares System — nur die Farben (ohne Namen/Hex).
@@ -49,20 +45,18 @@ const ogBild = d.cover?.src;
         // Triptychon: Cover in der Mitte (morpht), zwei Eindrücke links & rechts.
         <div class="case-hero-trio">
           <figure class="case-hero-trio__seite case-hero-trio__seite--links" data-reveal>
-            <Image
-              src={d.heroSeiten[0]}
+            <CmsBild
+              bild={d.heroSeiten[0]}
               alt={`${d.titel} — Eindruck`}
-              widths={[400, 600, 900]}
               sizes="(max-width: 820px) 48vw, 28vw"
               class="case-hero-trio__bild"
             />
           </figure>
           <figure class="case-hero-trio__mitte" transition:name={`cover-${p.id}`}>
             {d.cover && (
-              <Image
-                src={d.cover}
+              <CmsBild
+                bild={d.cover}
                 alt={`${d.titel}, ${d.disziplin[0]}`}
-                widths={[600, 900, 1300, 1700]}
                 sizes="(max-width: 820px) 100vw, 44vw"
                 class="case-hero-trio__bild"
                 style={`object-position:${d.coverFokus ?? "center"}`}
@@ -76,10 +70,9 @@ const ogBild = d.cover?.src;
             data-reveal
             style="--reveal-delay:.1s"
           >
-            <Image
-              src={d.heroSeiten[1]}
+            <CmsBild
+              bild={d.heroSeiten[1]}
               alt={`${d.titel} — Eindruck`}
-              widths={[400, 600, 900]}
               sizes="(max-width: 820px) 48vw, 28vw"
               class="case-hero-trio__bild"
             />
@@ -88,10 +81,9 @@ const ogBild = d.cover?.src;
       ) : (
         <figure class="case-hero" transition:name={`cover-${p.id}`}>
           {d.cover && (
-            <Image
-              src={d.cover}
+            <CmsBild
+              bild={d.cover}
               alt={`${d.titel}, ${d.disziplin[0]}`}
-              widths={[768, 1200, 1800, 2400]}
               sizes="100vw"
               class="case-hero__bild"
               style={`object-position:${d.coverFokus ?? "center"}`}
@@ -200,10 +192,9 @@ const ogBild = d.cover?.src;
             case "breit":
               return (
                 <figure class="block-breit huelle" data-reveal>
-                  <Image
-                    src={a.bild}
+                  <CmsBild
+                    bild={a.bild}
                     alt={a.bildunterschrift ?? d.titel}
-                    widths={[600, 900, 1300, 1700]}
                     sizes="(max-width: 1000px) 92vw, 72vw"
                     class="block-breit__bild"
                   />
@@ -216,10 +207,9 @@ const ogBild = d.cover?.src;
               return (
                 <figure class:list={["block-voll", { "block-voll--hoch": a.hoch }]} data-reveal>
                   <div class="block-voll__rahmen">
-                    <Image
-                      src={a.bild}
+                    <CmsBild
+                      bild={a.bild}
                       alt={a.bildunterschrift ?? d.titel}
-                      widths={[900, 1400, 2000, 2600]}
                       sizes="100vw"
                       class="block-voll__bild"
                       {...(a.hoch ? {} : { "data-parallax": true })}
@@ -235,10 +225,9 @@ const ogBild = d.cover?.src;
                 <figure class="block-duo huelle" data-reveal>
                   <div class="block-duo__grid">
                     {a.bilder.map((b) => (
-                      <Image
-                        src={b}
+                      <CmsBild
+                        bild={b}
                         alt={a.bildunterschrift ?? d.titel}
-                        widths={[500, 800, 1100]}
                         sizes="(max-width: 820px) 92vw, 38vw"
                         class="block-duo__bild"
                       />

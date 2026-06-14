@@ -1,0 +1,23 @@
+# Interner Mini-Proxy des Emi-Stacks.
+#
+# Er lauscht auf Port 80 und teilt EINE Domain auf zwei Dienste auf:
+#   /admin*  und  /api/*  → CMS (Login, Daten-API, Bilder)
+#   alles andere          → Astro-Frontend
+#
+# Nach AUSSEN bleibt der Stack damit „ein Upstream auf Port 80" – genau das
+# Muster, das dein Multi-Tenant-Caddy per Label erwartet
+# (caddy.reverse_proxy: "{{upstreams 80}}"). So muss an der äußeren
+# Caddy-/Netz-Konfiguration nichts Grundlegendes geändert werden.
+
+:80 {
+	encode zstd gzip
+
+	@cms path /admin* /api/*
+	handle @cms {
+		reverse_proxy cms:3001
+	}
+
+	handle {
+		reverse_proxy web:4321
+	}
+}

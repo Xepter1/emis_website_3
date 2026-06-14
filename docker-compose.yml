@@ -1,25 +1,81 @@
-# Portainer-Stack für die Emi-Website.
+# Stack für Emis Website – jetzt DREI kleine Dienste:
 #
-# Diese Datei ist für die PORTAINER "Repository"-Methode gedacht:
-# Portainer klont das Repo und BAUT das Image lokal aus dem Dockerfile.
-#   → kein Registry-Login, kein "Paket public machen".
-#   → Update: am Stack "Pull and redeploy" (klont neu + baut neu).
-#   → `pull_policy: build` erzwingt das Neubauen beim Redeploy.
+#   web    → Astro-SSR-Frontend (Design unverändert). Holt Inhalte live aus dem CMS.
+#   cms    → Payload-CMS (Login unter /admin, Inhalte-DB, Bild-Uploads).
+#   proxy  → winziger interner Caddy. Lauscht auf :80 und teilt die Domain auf:
+#              /admin* und /api/*  → cms:3001
+#              alles andere        → web:4321
+#            Nach außen ist der Stack damit „ein Upstream auf Port 80" – passt 1:1
+#            zu deinem Multi-Tenant-Caddy (caddy.reverse_proxy "{{upstreams 80}}").
 #
-# Alternative (Registry-Methode): statt des build-Blocks einfach
-#   image: ghcr.io/xepter1/emis_website_3:latest
-# eintragen (dafür muss das GHCR-Paket public sein). Siehe README.
+# WICHTIG: Die zwei Volumes (cms_data, cms_media) MÜSSEN persistent bleiben –
+# dort liegen Emis Projekte (SQLite-DB) und alle hochgeladenen Bilder. Ohne sie
+# sind nach einem Update alle Inhalte weg.
+#
+# Auf dem Server (Multi-Tenant): die äußeren Caddy-Labels + das externe `caddy`-
+# Netz gehören an den `proxy`-Dienst (siehe auskommentierte Blöcke + DEPLOY.md).
 
 services:
-  emis-website:
+  web:
     build:
       context: .
       dockerfile: Dockerfile
     image: emis-website:latest
-    container_name: emis-website
+    container_name: emis-web
     restart: unless-stopped
     pull_policy: build
+    depends_on:
+      - cms
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4321
+      CMS_INTERNAL_URL: http://cms:3001
+      CMS_PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://designbyems.de}
+
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    image: emis-cms:latest
+    container_name: emis-cms
+    restart: unless-stopped
+    pull_policy: build
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # PAYLOAD_SECRET MUSS gesetzt sein (.env / Stack). Erzeugen: openssl rand -hex 32
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: file:/app/data/emi.db
+      MEDIA_DIR: /app/media
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://designbyems.de}
+    volumes:
+      - cms_data:/app/data # SQLite-Datenbank (Emis Projekte) – bleibt erhalten
+      - cms_media:/app/media # hochgeladene Bilder – bleibt erhalten
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: emis-proxy
+    restart: unless-stopped
+    depends_on:
+      - web
+      - cms
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    # Lokal testen: Host-Port freigeben (hinter dem Multi-Tenant-Caddy weglassen).
     ports:
-      # Host-Port:Container-Port — linken Wert auf einen freien Port setzen
-      # (oder weglassen und per Reverse-Proxy / Labels einbinden).
       - "8087:80"
+    # ── Server / Multi-Tenant-Caddy: stattdessen die Labels + das externe Netz
+    #    HIER aktivieren und den ports-Block oben entfernen ──
+    # labels:
+    #   caddy: designbyems.de, www.designbyems.de
+    #   caddy.reverse_proxy: "{{upstreams 80}}"
+    # networks: [default, caddy]
+
+volumes:
+  cms_data:
+  cms_media:
+# networks:
+#   default:
+#   caddy:
+#     external: true

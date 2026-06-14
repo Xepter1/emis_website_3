@@ -1,0 +1,31 @@
+---
+/**
+ * Drop-in-Ersatz für Astros <Image> bei CMS-Bildern.
+ * Rendert ein <img> mit srcset aus den im CMS erzeugten Größen – gleiche
+ * Klassen, Styles und sizes wie zuvor, also optisch identisch. Layout-Sprünge
+ * vermeidet width/height aus dem Bild. Zusätzliche Attribute (style,
+ * loading, fetchpriority, data-parallax …) werden durchgereicht.
+ */
+import type { CmsBild } from '../lib/cms';
+
+interface Props {
+  bild: CmsBild;
+  alt?: string;
+  class?: string;
+  sizes?: string;
+  [key: string]: any;
+}
+
+const { bild, alt, class: klasse, sizes, ...rest } = Astro.props;
+---
+
+<img
+  src={bild.src}
+  srcset={bild.srcset}
+  sizes={sizes}
+  width={bild.width}
+  height={bild.height}
+  alt={alt ?? bild.alt}
+  class={klasse}
+  {...rest}
+/>

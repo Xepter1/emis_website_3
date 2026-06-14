@@ -92,7 +92,20 @@ docker run --rm -p 8087:80 emis-website   # → http://localhost:8087
 
 ## Ein neues Projekt anlegen (ohne Code)
 
-Jedes Projekt ist **ein Ordner** unter `src/content/projekte/`.
+> **Neu: Das geht jetzt komfortabel im CMS.** Emi öffnet
+> `https://designbyems.de/admin`, loggt sich ein (E-Mail + Passwort) und klickt
+> **Projekte → Neu**: Felder ausfüllen, Bilder per Drag & Drop hochladen,
+> **Speichern** – die Änderung ist sofort live. Kein Datei-Editieren, kein
+> Entwickler nötig. Aufbau & Betrieb des CMS: siehe [DEPLOY.md](DEPLOY.md).
+>
+> Die Felder im CMS entsprechen exakt den unten beschriebenen (titel, jahr,
+> disziplin, Farbwelt, Abschnitte voll/breit/duo/text/zitat …). Die folgende
+> Datei-Variante bleibt als technische Referenz erhalten.
+
+<details>
+<summary>Technische Referenz: Projekt als Datei (altes Verfahren)</summary>
+
+Jedes Projekt war **ein Ordner** unter `src/content/projekte/`.
 
 1. Kopiere einen bestehenden Ordner, z. B. `coffeecats/`, und benenne ihn um
    (der Ordnername wird die URL: `/projekte/<ordnername>`).
@@ -151,6 +164,8 @@ unter `/projekte/<ordnername>` die eigene Case-Welt mit dem Morph-Übergang.
 und `status: live` setzt, erscheint die volle Case-Seite von selbst.
 Ein solcher Platzhalter ist aktuell angelegt
 (`in-arbeit-editorial/`).
+
+</details>
 
 ---
 

@@ -1,13 +1,11 @@
 ---
-import { getCollection } from "astro:content";
-import { Image } from "astro:assets";
+import { getProjekte } from "../lib/cms";
+import CmsBild from "../components/CmsBild.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-// Kuratiert nach `reihenfolge`. Live-Projekte verlinken; „in-arbeit" sind
-// ruhige Platzhalter-Slots.
-const projekte = (await getCollection("projekte")).sort(
-  (a, b) => a.data.reihenfolge - b.data.reihenfolge,
-);
+// Kuratiert nach `reihenfolge` (kommt bereits sortiert aus dem CMS).
+// Live-Projekte verlinken; „in-arbeit" sind ruhige Platzhalter-Slots.
+const projekte = await getProjekte();
 
 const nr = (i: number) => String(i + 1).padStart(2, "0");
 ---
@@ -61,10 +59,9 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
               return (
                 <a class="werk" href={aktion.href} style={weltVars} aria-label={aktion.label} data-reveal>
                   <figure class="werk__media">
-                    <Image
-                      src={p.data.cover}
+                    <CmsBild
+                      bild={p.data.cover}
                       alt={aktion.label}
-                      widths={[480, 768, 1100, 1500]}
                       sizes="(max-width: 900px) 92vw, 56vw"
                       class="werk__bild"
                       style={`object-position:${p.data.coverFokus ?? "center"}`}
@@ -117,10 +114,9 @@ const nr = (i: number) => String(i + 1).padStart(2, "0");
           <a class="werk" href={`/projekte/${p.id}`} style={weltVars} data-reveal>
             <figure class="werk__media" transition:name={`cover-${p.id}`}>
               {p.data.cover && (
-                <Image
-                  src={p.data.cover}
+                <CmsBild
+                  bild={p.data.cover}
                   alt={`${p.data.titel}, ${p.data.disziplin[0]}`}
-                  widths={[480, 768, 1100, 1500]}
                   sizes="(max-width: 900px) 92vw, 56vw"
                   class="werk__bild"
                   style={`object-position:${p.data.coverFokus ?? "center"}`}

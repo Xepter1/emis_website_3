@@ -9,3 +9,7 @@ dist
 .DS_Store
 npm-debug.log*
 *.md
+# Das CMS ist ein eigener Build-Kontext (./cms) – gehört NICHT ins Astro-Image.
+cms
+# Roh-/Design-Quellen, nicht fürs Image nötig.
+Bilder

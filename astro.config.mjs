@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import node from '@astrojs/node';
 
 // Hinweis: `site` auf die echte Domain setzen, sobald sie steht.
 // Sie steuert kanonische URLs, Sitemap und absolute Open-Graph-Bildpfade.
@@ -17,6 +18,8 @@ export default defineConfig({
     // wir, indem jedes <Image> width/height aus dem Import trägt.
     responsiveStyles: true,
   },
-  // Statisches Deploy (Netlify / Vercel / Cloudflare Pages).
-  output: 'static',
+  // SSR: Inhalte werden zur Laufzeit live aus dem CMS (Payload) geholt.
+  // Eine Änderung im CMS ist sofort online – ohne Neu-Build.
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
 });

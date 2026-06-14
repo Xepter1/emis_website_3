@@ -6,18 +6,23 @@
 #
 # Nach AUSSEN bleibt der Stack damit „ein Upstream auf Port 80" – genau das
 # Muster, das dein Multi-Tenant-Caddy per Label erwartet
-# (caddy.reverse_proxy: "{{upstreams 80}}"). So muss an der äußeren
-# Caddy-/Netz-Konfiguration nichts Grundlegendes geändert werden.
+# (caddy.reverse_proxy: "{{upstreams 80}}").
+#
+# WICHTIG: Upstreams werden über EINDEUTIGE Netz-Aliase angesprochen
+# (astro / payload), NICHT über die generischen Dienstnamen web/cms. Im
+# geteilten `caddy`-Netz gäbe es sonst Namens-Kollisionen mit anderen Mandanten
+# (deren Stacks heißen oft auch „web"/„cms"). Die Aliase existieren nur im
+# internen Netz dieses Stacks.
 
 :80 {
 	encode zstd gzip
 
 	@cms path /admin* /api/*
 	handle @cms {
-		reverse_proxy cms:3001
+		reverse_proxy payload:3001
 	}
 
 	handle {
-		reverse_proxy web:4321
+		reverse_proxy astro:4321
 	}
 }

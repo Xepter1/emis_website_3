@@ -1,19 +1,18 @@
-# Stack für Emis Website – jetzt DREI kleine Dienste:
+# Stack für Emis Website – DREI kleine Dienste:
 #
 #   web    → Astro-SSR-Frontend (Design unverändert). Holt Inhalte live aus dem CMS.
 #   cms    → Payload-CMS (Login unter /admin, Inhalte-DB, Bild-Uploads).
 #   proxy  → winziger interner Caddy. Lauscht auf :80 und teilt die Domain auf:
-#              /admin* und /api/*  → cms:3001
-#              alles andere        → web:4321
+#              /admin* und /api/*  → cms     alles andere → web
 #            Nach außen ist der Stack damit „ein Upstream auf Port 80" – passt 1:1
-#            zu deinem Multi-Tenant-Caddy (caddy.reverse_proxy "{{upstreams 80}}").
+#            zu einem Multi-Tenant-Caddy (caddy.reverse_proxy "{{upstreams 80}}").
 #
-# WICHTIG: Die zwei Volumes (cms_data, cms_media) MÜSSEN persistent bleiben –
-# dort liegen Emis Projekte (SQLite-DB) und alle hochgeladenen Bilder. Ohne sie
-# sind nach einem Update alle Inhalte weg.
+# Upstream-Aliase: web/cms tragen im internen Netz die EINDEUTIGEN Aliase
+# astro/payload. Der Proxy spricht NUR diese an (siehe proxy/Caddyfile) – so
+# gibt es im geteilten Caddy-Netz keine Namens-Kollision mit anderen Mandanten.
 #
-# Auf dem Server (Multi-Tenant): die äußeren Caddy-Labels + das externe `caddy`-
-# Netz gehören an den `proxy`-Dienst (siehe auskommentierte Blöcke + DEPLOY.md).
+# WICHTIG: Die Volumes cms_data + cms_media MÜSSEN persistent bleiben (Emis
+# Projekte + Bilder). Sonst sind nach einem Update alle Inhalte weg.
 
 services:
   web:
@@ -30,8 +29,11 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 4321
-      CMS_INTERNAL_URL: http://cms:3001
+      CMS_INTERNAL_URL: http://payload:3001
       CMS_PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://designbyems.de}
+    networks:
+      internal:
+        aliases: [astro]
 
   cms:
     build:
@@ -44,7 +46,6 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      # PAYLOAD_SECRET MUSS gesetzt sein (.env / Stack). Erzeugen: openssl rand -hex 32
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
       DATABASE_URI: file:/app/data/emi.db
       MEDIA_DIR: /app/media
@@ -52,6 +53,9 @@ services:
     volumes:
       - cms_data:/app/data # SQLite-Datenbank (Emis Projekte) – bleibt erhalten
       - cms_media:/app/media # hochgeladene Bilder – bleibt erhalten
+    networks:
+      internal:
+        aliases: [payload]
 
   proxy:
     image: caddy:2-alpine
@@ -62,6 +66,8 @@ services:
       - cms
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - internal
     # Lokal testen: Host-Port freigeben (hinter dem Multi-Tenant-Caddy weglassen).
     ports:
       - "8087:80"
@@ -70,12 +76,15 @@ services:
     # labels:
     #   caddy: designbyems.de, www.designbyems.de
     #   caddy.reverse_proxy: "{{upstreams 80}}"
-    # networks: [default, caddy]
+    # networks:
+    #   internal:
+    #   caddy:
+
+networks:
+  internal:
+  # caddy:           # Server: externes Multi-Tenant-Netz
+  #   external: true
 
 volumes:
   cms_data:
   cms_media:
-# networks:
-#   default:
-#   caddy:
-#     external: true

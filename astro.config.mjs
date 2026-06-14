@@ -22,4 +22,7 @@ export default defineConfig({
   // Eine Änderung im CMS ist sofort online – ohne Neu-Build.
   output: 'server',
   adapter: node({ mode: 'standalone' }),
+  // Im Container an ALLE Adressen binden (0.0.0.0), sonst erreicht der Proxy
+  // den SSR-Server nicht (er lauscht sonst nur auf localhost).
+  server: { host: true, port: 4321 },
 });

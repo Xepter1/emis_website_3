@@ -27,32 +27,84 @@ Auf dem Server (`/opt/sites/designbyems/`) liegt – wie gehabt – eine **eigen
 Repo-Vorlage nur am `proxy`-Dienst: dort gehören die Caddy-Labels und das
 externe `caddy`-Netz hin (statt des Host-Ports):
 
+Die aktuell laufende Server-Compose (`/opt/sites/designbyems/docker-compose.yml`):
+
 ```yaml
+services:
+  web:
+    build: { context: ./app, dockerfile: Dockerfile }
+    image: designbyems-web:latest
+    container_name: designbyems-web
+    restart: unless-stopped
+    depends_on: [cms]
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "4321"
+      CMS_INTERNAL_URL: http://payload:3001
+      CMS_PUBLIC_URL: ${PUBLIC_URL}
+    networks:
+      internal: { aliases: [astro] }
+
+  cms:
+    build: { context: ./app/cms, dockerfile: Dockerfile }
+    image: designbyems-cms:latest
+    container_name: designbyems-cms
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+      DATABASE_URI: file:/app/data/emi.db
+      MEDIA_DIR: /app/media
+      PUBLIC_URL: ${PUBLIC_URL}
+    volumes:
+      - cms_data:/app/data
+      - cms_media:/app/media
+    networks:
+      internal: { aliases: [payload] }
+
   proxy:
     image: caddy:2-alpine
-    container_name: emis-proxy
+    container_name: designbyems-proxy
     restart: unless-stopped
     depends_on: [web, cms]
     volumes:
-      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./app/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [internal, caddy]
     labels:
       caddy: designbyems.de, www.designbyems.de
       caddy.reverse_proxy: "{{upstreams 80}}"
-    networks: [default, caddy]
 
 networks:
-  default:
+  internal:
   caddy:
     external: true
+
+volumes:
+  cms_data:
+  cms_media:
 ```
 
-Die Dienste `web` und `cms` brauchen **keine** Caddy-Labels und **kein**
-`caddy`-Netz – sie sind nur intern über den Proxy erreichbar.
+> **Warum die Aliase `astro`/`payload` (NICHT `web`/`cms`)?** Der Proxy hängt im
+> geteilten `caddy`-Netz. Dort gibt es bei anderen Mandanten ebenfalls Dienste
+> namens `web`/`cms` → Docker-DNS lieferte dem Proxy den falschen Container
+> (502). Die eindeutigen Aliase existieren nur im internen Netz dieses Stacks.
+>
+> Hinweis: Die alten Labels zeigten auf den nginx-Container. Sie wandern 1:1 auf
+> `proxy` – derselbe Port 80, dieselbe Domain. Die Pfad-Aufteilung passiert
+> INTERN im Proxy (`proxy/Caddyfile`).
 
-> Hinweis: Die alten Labels zeigten auf den nginx-Container (`{{upstreams 80}}`).
-> Sie wandern jetzt 1:1 auf `proxy` – derselbe Port 80, dieselbe Domain. Die
-> Pfad-Aufteilung passiert INTERN im Proxy (`proxy/Caddyfile`), nicht im äußeren
-> Caddy. Dadurch bleibt die äußere Konfiguration so simpel wie bisher.
+### Troubleshooting
+
+- **502 auf `/`, aber `/admin` geht:** Der Proxy-Caddy hat eine veraltete
+  Upstream-IP gecacht (z. B. nachdem `web`/`cms` neu erstellt wurden).
+  `caddy reload` leert diesen Cache NICHT zuverlässig – den Proxy-Container
+  **neu starten**: `docker compose restart proxy`. Faustregel: Nach jedem
+  Recreate von `web`/`cms` auch `proxy` neu starten.
+- **`no such table: projekte` im CMS-Log:** Migration lief nicht. `start:prod`
+  führt `payload migrate` aus; die Migrationsdateien liegen in
+  `app/cms/src/migrations/`. Bei Bedarf `docker compose up -d --build cms`.
 
 ---
 
@@ -62,6 +114,7 @@ Die Dienste `web` und `cms` brauchen **keine** Caddy-Labels und **kein**
 # auf dem Server
 cd /opt/sites/designbyems/app && git fetch --depth 1 origin main && git reset --hard origin/main
 cd /opt/sites/designbyems && docker compose up -d --build
+docker compose restart proxy   # Upstream-DNS-Cache frisch (siehe Troubleshooting)
 ```
 
 Voraussetzung – einmalig in der Server-`.env` (neben der Compose):

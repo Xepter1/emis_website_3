@@ -44,10 +44,11 @@ export default buildConfig({
     client: {
       url: process.env.DATABASE_URI || 'file:./emi.db',
     },
-    // In Entwicklung: Schema automatisch synchronisieren (push).
-    // In Produktion: über Migrationen (werden beim Containerstart ausgeführt).
-    push: process.env.NODE_ENV !== 'production',
-    migrationDir: path.resolve(dirname, 'migrations'),
+    // Schema automatisch synchronisieren (push) – auch in Produktion. Für dieses
+    // kleine Ein-Personen-CMS ist das robust und wartungsarm: beim Start werden
+    // fehlende Tabellen/Spalten angelegt; ohne destruktive Änderungen passiert
+    // nichts. (Alternative für später: echte Migrationen + push:false.)
+    push: true,
   }),
   // Beim ersten Start einmalig die bestehenden Projekte übertragen (nur wenn leer).
   onInit: async (payload) => {

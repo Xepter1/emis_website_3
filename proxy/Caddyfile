@@ -17,7 +17,16 @@
 :80 {
 	encode zstd gzip
 
-	# CMS (Payload/Next.js): Admin, Daten-API, Bilder UND die Next-Assets.
+	# CMS-Bilder lange cachen. Payload setzt selbst KEIN Cache-Control, dadurch
+	# lud der Browser die Bilder bei jeder Navigation neu (fühlte sich zäh an).
+	# 30 Tage ist für ein selten geändertes Portfolio ein guter Kompromiss.
+	@media path /api/media/file/*
+	handle @media {
+		header Cache-Control "public, max-age=2592000"
+		reverse_proxy payload:3001
+	}
+
+	# CMS (Payload/Next.js): Admin, Daten-API UND die Next-Assets.
 	# Wichtig: /_next/* gehört zum CMS (Astro nutzt /_astro/, kollidiert also nicht).
 	# Ohne /_next/* lädt das Admin-JavaScript nicht → weiße Seite.
 	@cms path /admin* /api/* /_next/*

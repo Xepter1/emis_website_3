@@ -17,7 +17,10 @@
 :80 {
 	encode zstd gzip
 
-	@cms path /admin* /api/*
+	# CMS (Payload/Next.js): Admin, Daten-API, Bilder UND die Next-Assets.
+	# Wichtig: /_next/* gehört zum CMS (Astro nutzt /_astro/, kollidiert also nicht).
+	# Ohne /_next/* lädt das Admin-JavaScript nicht → weiße Seite.
+	@cms path /admin* /api/* /_next/*
 	handle @cms {
 		reverse_proxy payload:3001
 	}

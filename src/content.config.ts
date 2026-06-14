@@ -17,6 +17,9 @@ const projekte = defineCollection({
     z.object({
       // — Pflicht-Kerndaten —
       titel: z.string(),
+      // Optionale Farbe, die der Titel auf der Case-Seite per Klick annimmt
+      // (kleines Detail — z.B. Xepter). Fehlt sie, ist der Titel nicht klickbar.
+      titelKlickFarbe: z.string().optional(),
       kunde: z.string().optional(), // optional — nicht jedes Projekt nennt einen Kunden
       jahr: z.union([z.string(), z.number()]).transform(String),
       disziplin: z.array(z.string()), // z.B. ["Corporate Design", "Logo"]
@@ -59,6 +62,11 @@ const projekte = defineCollection({
       einleitung: z.string().optional(), // der eine ruhige Eröffnungssatz
       aufgabe: z.string().optional(), // die Aufgabe / der Gedanke dahinter
       leistung: z.array(z.string()).optional(), // erbrachte Leistungen
+
+      // — Farbpalette — optional explizit setzbar (eigene Hex-Werte). Fehlt sie,
+      //   leitet die Case-Seite die Palette aus der Farbwelt ab. Ein leeres
+      //   Array ([]) blendet die Palette bewusst aus.
+      farbpalette: z.array(z.string()).optional(),
 
       // — Geordnete Abschnitte: die Arbeit groß und atmen lassen —
       abschnitte: z

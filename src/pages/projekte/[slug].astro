@@ -26,12 +26,11 @@ const { p, naechstes } = Astro.props;
 const d = p.data;
 
 // Farbwelt als sichtbares System — nur die Farben (ohne Namen/Hex).
-const palette = [
-  d.welt.papier,
-  d.welt.tinte,
-  d.welt.akzent,
-  d.welt.sekundaer,
-].filter(Boolean) as string[];
+// Explizite farbpalette gewinnt; ein leeres Array blendet sie aus.
+const palette = (
+  d.farbpalette ??
+  [d.welt.papier, d.welt.tinte, d.welt.akzent, d.welt.sekundaer]
+).filter(Boolean) as string[];
 
 const ogBild = d.cover?.src;
 ---
@@ -114,7 +113,12 @@ const ogBild = d.cover?.src;
       <p class="case-kopf__diszi eyebrow" data-reveal>
         {d.disziplin.join("  ·  ")}
       </p>
-      <h1 class="case-kopf__titel display-xl" data-reveal style="--reveal-delay:.06s">
+      <h1
+        class="case-kopf__titel display-xl"
+        data-reveal
+        style={`--reveal-delay:.06s${d.titelKlickFarbe ? `;--klickfarbe:${d.titelKlickFarbe}` : ""}`}
+        {...(d.titelKlickFarbe ? { "data-klickfarbe": "" } : {})}
+      >
         {d.titel}
       </h1>
       {
@@ -160,16 +164,18 @@ const ogBild = d.cover?.src;
         )
       }
 
-      <div class="case-palette" aria-label="Farbpalette">
-        <p class="case-palette__label eyebrow">Farbpalette</p>
-        <div class="case-palette__reihe">
-          {
-            palette.map((wert) => (
-              <span class="case-palette__feld" style={`background:${wert}`} />
-            ))
-          }
-        </div>
-      </div>
+      {
+        palette.length > 0 && (
+          <div class="case-palette" aria-label="Farbpalette">
+            <p class="case-palette__label eyebrow">Farbpalette</p>
+            <div class="case-palette__reihe">
+              {palette.map((wert) => (
+                <span class="case-palette__feld" style={`background:${wert}`} />
+              ))}
+            </div>
+          </div>
+        )
+      }
     </section>
 
     <!-- ============== ABSCHNITTE (Erzählung statt Galerie) ============== -->
@@ -377,6 +383,14 @@ const ogBild = d.cover?.src;
   .case-kopf__titel {
     margin: 0;
     max-width: 14ch;
+  }
+  /* Klickbarer Titel — nimmt per Klick die hinterlegte Farbe an. */
+  .case-kopf__titel[data-klickfarbe] {
+    cursor: pointer;
+    transition: color 0.5s var(--ease-ruhig);
+  }
+  .case-kopf__titel[data-klickfarbe].ist-geklickt {
+    color: var(--klickfarbe);
   }
   .case-kopf__lede {
     margin-top: clamp(1.4rem, 3vw, 2.2rem);
@@ -609,7 +623,15 @@ const ogBild = d.cover?.src;
     });
   }
 
+  // Klickbarer Titel — schaltet die hinterlegte --klickfarbe um.
+  function initTitelKlick() {
+    document.querySelectorAll<HTMLElement>("[data-klickfarbe]").forEach((titel) => {
+      titel.addEventListener("click", () => titel.classList.toggle("ist-geklickt"));
+    });
+  }
+
   document.addEventListener("astro:page-load", initParallax);
+  document.addEventListener("astro:page-load", initTitelKlick);
   // Vor jedem Seitenwechsel die Trigger killen (verhindert Dubletten/Leaks).
   document.addEventListener("astro:before-swap", () => {
     ScrollTrigger.getAll().forEach((t) => t.kill());

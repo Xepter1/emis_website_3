@@ -122,7 +122,17 @@ const werdegang = [
     padding-top: clamp(2rem, 6vw, 5rem);
   }
   .ueber__titel {
+    /* Versal-Ü: Die gebündelte Schrift deklariert ihren oberen Rand (ascent)
+       knapper, als die Umlaut-Punkte tatsächlich hoch reichen — sie ragen rund
+       0,18em über die Zeilenbox-Oberkante (bei line-height 0.98). Zusammen mit
+       dem Reveal-Compositing-Layer (will-change/transform) schnitten manche
+       Mobil-GPUs/Browser die Pünktchen oben ab: mal gar nicht sichtbar, mal kurz
+       da (Fallback-Schrift) und beim Font-Swap weg.
+       padding-top schafft Mal-Raum für die Punkte; das gleich große negative
+       margin-top hält Textposition UND Folgeabstände exakt unverändert. */
     margin: 0;
+    margin-top: -0.25em;
+    padding-top: 0.25em;
     text-transform: uppercase;
     letter-spacing: 0;
   }

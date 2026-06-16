@@ -1,12 +1,17 @@
 # Deployment – Emis Website mit CMS
 
-Seit dem CMS-Umbau besteht die Seite aus **drei kleinen Diensten** in einem Stack:
+Die Seite besteht aus **vier kleinen Diensten** in einem Stack:
 
 | Dienst | Was | Port (intern) |
 |---|---|---|
 | **web** | Astro-SSR-Frontend (Design unverändert), holt Inhalte live aus dem CMS | `4321` |
 | **cms** | Payload-CMS: Login unter `/admin`, Inhalte-DB (SQLite), Bild-Uploads | `3001` |
-| **proxy** | winziger Caddy, teilt eine Domain auf: `/admin*` + `/api/*` → cms, sonst → web | `80` |
+| **form** | Kontaktformular-Dienst (Node + nodemailer): nimmt `/api/kontakt` entgegen, mailt per SMTP an `mail@designbyems.de` + Auto-Bestätigung. Kein Drittanbieter. | `8080` |
+| **proxy** | winziger Caddy, teilt eine Domain auf: `/api/kontakt` → form, `/admin*` + `/api/*` + `/_next/*` → cms, sonst → web | `80` |
+
+> **Reihenfolge im Proxy ist wichtig:** `/api/kontakt` wird **vor** der
+> generischen `/api/*`-Regel an den `form`-Dienst geroutet, sonst würde das CMS
+> die Route abfangen. Siehe `proxy/Caddyfile`.
 
 Nach außen ist der Stack damit **„ein Upstream auf Port 80"** – exakt das Muster,
 das dein bestehender Multi-Tenant-Caddy schon nutzt. An Firewall, äußerem Caddy
@@ -20,80 +25,59 @@ werden.
 
 ---
 
-## Server-Compose (Multi-Tenant-Caddy mit Labels)
+## Portainer-Git-Stack (Multi-Tenant-Caddy mit Labels)
 
-Auf dem Server (`/opt/sites/designbyems/`) liegt – wie gehabt – eine **eigene**
-`docker-compose.yml` (nicht die Repo-Datei). Sie unterscheidet sich von der
-Repo-Vorlage nur am `proxy`-Dienst: dort gehören die Caddy-Labels und das
-externe `caddy`-Netz hin (statt des Host-Ports):
+Die Seite läuft als **Portainer-Git-Stack** (gleiches Muster wie der
+`xepter`-Stack): Portainer klont dieses Repo und baut die Images selbst. Der
+Stack zeigt auf die Produktions-Compose **`compose.hetzner.yml`** im Repo-Root.
 
-Die aktuell laufende Server-Compose (`/opt/sites/designbyems/docker-compose.yml`):
+> **Zwei Compose-Dateien, ein Repo:**
+> - `compose.hetzner.yml` → **Produktion/Portainer.** Nur der `proxy` hängt am
+>   externen `caddy`-Netz und trägt die Domain-Labels
+>   (`caddy: designbyems.de, www.designbyems.de` → `{{upstreams 80}}`).
+> - `docker-compose.yml` → **nur lokaler Test** (Host-Port `8087:80`, kein
+>   externes Netz). Siehe „Lokal testen" weiter unten.
+>
+> web/cms/form bleiben in beiden im internen Netz; die Pfad-Aufteilung macht der
+> proxy (`proxy/Caddyfile`): `/api/kontakt` → form, `/admin*` + `/api/*` +
+> `/_next/*` → cms, alles andere → web.
 
-```yaml
-services:
-  web:
-    build: { context: ./app, dockerfile: Dockerfile }
-    image: designbyems-web:latest
-    container_name: designbyems-web
-    restart: unless-stopped
-    depends_on: [cms]
-    environment:
-      NODE_ENV: production
-      HOST: 0.0.0.0
-      PORT: "4321"
-      CMS_INTERNAL_URL: http://payload:3001
-      CMS_PUBLIC_URL: ${PUBLIC_URL}
-    networks:
-      internal: { aliases: [astro] }
+### Stack in Portainer anlegen
 
-  cms:
-    build: { context: ./app/cms, dockerfile: Dockerfile }
-    image: designbyems-cms:latest
-    container_name: designbyems-cms
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: "3001"
-      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
-      DATABASE_URI: file:/app/data/emi.db
-      MEDIA_DIR: /app/media
-      PUBLIC_URL: ${PUBLIC_URL}
-    volumes:
-      - cms_data:/app/data
-      - cms_media:/app/media
-    networks:
-      internal: { aliases: [payload] }
+1. **Stacks → Add stack → Git Repository.**
+2. Repository: `git@github.com:Xepter1/emis_website_3.git` (bzw. HTTPS + Token),
+   Branch `main`, **Compose path: `compose.hetzner.yml`**.
+3. Unter **Environment variables** setzen (NIE ins Git):
 
-  proxy:
-    image: caddy:2-alpine
-    container_name: designbyems-proxy
-    restart: unless-stopped
-    depends_on: [web, cms]
-    volumes:
-      - ./app/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
-    networks: [internal, caddy]
-    labels:
-      caddy: designbyems.de, www.designbyems.de
-      caddy.reverse_proxy: "{{upstreams 80}}"
+   | Variable | Wert |
+   |---|---|
+   | `PAYLOAD_SECRET` | `<openssl rand -hex 32>` |
+   | `PUBLIC_URL` | `https://designbyems.de` |
+   | `SMTP_HOST` | `mail.your-server.de` |
+   | `SMTP_PORT` | `587` (STARTTLS — **NICHT** 465, Hetzner blockt ausgehend) |
+   | `SMTP_USER` | `mail@designbyems.de` |
+   | `SMTP_PASS` | `<Postfach-Passwort>` |
+   | `MAIL_FROM` | `mail@designbyems.de` |
+   | `MAIL_TO` | `mail@designbyems.de` |
 
-networks:
-  internal:
-  caddy:
-    external: true
+4. **Deploy the stack.** Danach hat der Stack **Total** control → künftig Env
+   ändern + **„Pull and redeploy"** direkt in der UI (wie bei xepter).
 
-volumes:
-  cms_data:
-  cms_media:
-```
+> **Migration vom alten CLI-Stack (einmalig):** Bisher lief die Seite per SSH
+> unter `/opt/sites/designbyems/`. Bevor der Portainer-Stack deployt, den alten
+> **abräumen** — sonst kollidieren die `container_name` (`designbyems-web` usw.):
+> ```bash
+> cd /opt/sites/designbyems && docker compose down
+> ```
+> Die alten Volumes (`designbyems_cms_data` / `_media`) sind leer (im CMS steht
+> noch nichts) → der neue Stack legt frische an, das CMS sät die 5
+> Bestandsprojekte beim ersten Start neu ein. Alte Volumes später mit
+> `docker volume rm` entfernen.
 
 > **Warum die Aliase `astro`/`payload` (NICHT `web`/`cms`)?** Der Proxy hängt im
 > geteilten `caddy`-Netz. Dort gibt es bei anderen Mandanten ebenfalls Dienste
 > namens `web`/`cms` → Docker-DNS lieferte dem Proxy den falschen Container
 > (502). Die eindeutigen Aliase existieren nur im internen Netz dieses Stacks.
->
-> Hinweis: Die alten Labels zeigten auf den nginx-Container. Sie wandern 1:1 auf
-> `proxy` – derselbe Port 80, dieselbe Domain. Die Pfad-Aufteilung passiert
-> INTERN im Proxy (`proxy/Caddyfile`).
 
 ### Troubleshooting
 
@@ -108,21 +92,24 @@ volumes:
 
 ---
 
-## Erststart / Update
+## Update (nach einem Git-Push)
 
-```bash
-# auf dem Server
-cd /opt/sites/designbyems/app && git fetch --depth 1 origin main && git reset --hard origin/main
-cd /opt/sites/designbyems && docker compose up -d --build
-docker compose restart proxy   # Upstream-DNS-Cache frisch (siehe Troubleshooting)
-```
+Im Portainer-Stack auf **„Pull and redeploy"** klicken (zieht `main`, baut die
+Images neu). Die Env-Variablen (`PAYLOAD_SECRET`, `PUBLIC_URL`, `SMTP_*`) stehen
+im Stack-Environment in Portainer (siehe oben) — **nie im Git**.
 
-Voraussetzung – einmalig in der Server-`.env` (neben der Compose):
+> Nach einem Recreate von `web`/`cms` den `proxy`-Container in Portainer einmal
+> **neu starten** — sonst zeigt der Caddy-Proxy evtl. auf eine veraltete
+> Upstream-IP (→ 502, siehe Troubleshooting).
 
-```env
-PAYLOAD_SECRET=<openssl rand -hex 32>
-PUBLIC_URL=https://designbyems.de
-```
+> Ohne die `SMTP_*`-Werte fährt der Stack trotzdem hoch — nur das Kontaktformular
+> liefert dann einen sauberen `502` (das Frontend zeigt den `mailto:`-Fallback).
+
+**Zustellbarkeit (offen):** Damit die Auto-Bestätigung an Kunden (Gmail/Outlook)
+sicher im Posteingang statt im Spam landet, sollten für `designbyems.de` noch
+**DKIM** (Hetzner-Mail-Panel → TXT-Record in die DNS-Zone) und **DMARC**
+(`_dmarc.designbyems.de` TXT, z. B. `v=DMARC1; p=none; rua=mailto:mail@designbyems.de`)
+eingerichtet werden. SPF sollte auf `~all` enden.
 
 Beim **ersten** Start überträgt das CMS automatisch die **5 bestehenden
 Projekte** in die Datenbank (nur wenn die DB leer ist – Updates überschreiben

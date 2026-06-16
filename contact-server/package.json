@@ -1,0 +1,14 @@
+{
+  "name": "emi-contact-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Winziger Kontaktformular-Dienst für designbyems.de: nimmt POST entgegen und mailt per SMTP. Kein Drittanbieter.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.16"
+  }
+}

@@ -1,0 +1,100 @@
+# Produktions-Compose für den PORTAINER-GIT-STACK (designbyems.de).
+# ----------------------------------------------------------------------------
+# Portainer klont dieses Repo und baut die Images selbst (build-Kontexte unten).
+# Auf diese Datei zeigt der Stack ("Compose path": compose.hetzner.yml) — genau
+# wie beim xepter-Stack.
+#
+# Environment (PAYLOAD_SECRET, PUBLIC_URL, SMTP_*) wird in der PORTAINER-STACK-UI
+# als "Environment variables" gesetzt — NIE ins Git.
+#
+# Unterschied zur docker-compose.yml im Repo (= lokaler Test, Host-Port 8087):
+# Hier hängt NUR der `proxy` am externen `caddy`-Netz und trägt die Domain-Labels.
+# web/cms/form bleiben im internen Netz; die Pfad-Aufteilung passiert im proxy
+# (proxy/Caddyfile): /api/kontakt → form, /admin* + /api/* + /_next/* → cms,
+# alles andere → web.
+#
+# WICHTIG: Die Volumes cms_data + cms_media (Emis Projekte + Bilder) MÜSSEN
+# persistent bleiben. Beim ersten Start sät das CMS die 5 Bestandsprojekte ein.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: designbyems-web:latest
+    container_name: designbyems-web
+    restart: unless-stopped
+    depends_on: [cms]
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "4321"
+      CMS_INTERNAL_URL: http://payload:3001
+      CMS_PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://designbyems.de}
+    networks:
+      internal:
+        aliases: [astro]
+
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    image: designbyems-cms:latest
+    container_name: designbyems-cms
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: file:/app/data/emi.db
+      MEDIA_DIR: /app/media
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://designbyems.de}
+    volumes:
+      - cms_data:/app/data # SQLite-Datenbank (Emis Projekte) – bleibt erhalten
+      - cms_media:/app/media # hochgeladene Bilder – bleibt erhalten
+    networks:
+      internal:
+        aliases: [payload]
+
+  form:
+    build:
+      context: ./contact-server
+      dockerfile: Dockerfile
+    image: designbyems-contact:latest
+    container_name: designbyems-contact
+    restart: unless-stopped
+    # Defaults mit :- (NICHT :?) → der Stack fährt IMMER hoch, auch wenn SMTP noch
+    # nicht gesetzt ist; dann gibt der Dienst nur sauber 502 zurück, die Seite
+    # bleibt online. SMTP-Werte in der Portainer-Stack-UI setzen.
+    # WICHTIG: SMTP_PORT=587 (STARTTLS). Hetzner blockiert ausgehend Port 465.
+    environment:
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      MAIL_FROM: "${MAIL_FROM:-}"
+      MAIL_TO: "${MAIL_TO:-}"
+    networks:
+      internal:
+        aliases: [kontakt]
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: designbyems-proxy
+    restart: unless-stopped
+    depends_on: [web, cms, form]
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [internal, caddy]
+    labels:
+      caddy: designbyems.de, www.designbyems.de
+      caddy.reverse_proxy: "{{upstreams 80}}"
+
+networks:
+  internal:
+  caddy:
+    external: true
+
+volumes:
+  cms_data:
+  cms_media:

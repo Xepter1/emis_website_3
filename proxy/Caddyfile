@@ -26,6 +26,13 @@
 		reverse_proxy payload:3001
 	}
 
+	# Kontaktformular → eigener Mini-Dienst (contact-server), NICHT ans CMS.
+	# MUSS vor der /api/*-Regel unten stehen, sonst fängt das CMS die Route ab.
+	@kontakt path /api/kontakt
+	handle @kontakt {
+		reverse_proxy kontakt:8080
+	}
+
 	# CMS (Payload/Next.js): Admin, Daten-API UND die Next-Assets.
 	# Wichtig: /_next/* gehört zum CMS (Astro nutzt /_astro/, kollidiert also nicht).
 	# Ohne /_next/* lädt das Admin-JavaScript nicht → weiße Seite.

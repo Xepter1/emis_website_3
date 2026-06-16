@@ -81,15 +81,19 @@ services:
         aliases: [kontakt]
 
   proxy:
-    image: caddy:2-alpine
+    # Caddyfile ist ins Image eingebacken (proxy/Dockerfile) – KEIN Bind-Mount,
+    # damit lokal dasselbe Image-Muster wie in Produktion gilt (siehe Dockerfile).
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    image: emis-proxy:latest
     container_name: emis-proxy
     restart: unless-stopped
+    pull_policy: build
     depends_on:
       - web
       - cms
       - form
-    volumes:
-      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
       - internal
     # Lokal testen: Host-Port freigeben (hinter dem Multi-Tenant-Caddy weglassen).

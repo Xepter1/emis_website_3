@@ -79,12 +79,16 @@ services:
         aliases: [kontakt]
 
   proxy:
-    image: caddy:2-alpine
+    # Caddyfile ist ins Image eingebacken (proxy/Dockerfile) – KEIN Bind-Mount.
+    # Grund: Portainer-Git-Stacks legten an der Mount-Stelle ein leeres Verzeichnis
+    # an, sobald die Datei kurz fehlte → „not a directory", Deploy-Endlosschleife.
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    image: designbyems-proxy:latest
     container_name: designbyems-proxy
     restart: unless-stopped
     depends_on: [web, cms, form]
-    volumes:
-      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
     networks: [internal, caddy]
     labels:
       caddy: designbyems.de, www.designbyems.de

@@ -1,0 +1,90 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LAB / TEST-Stack  ·  vollständig getrennt von der Produktion
+#
+#   Zweck: den `lab`-Branch unter einer eigenen Subdomain testen, OHNE die
+#   Live-Seite (designbyems.de) oder deren Inhalte/Bilder anzufassen.
+#
+#   Isolation gegenüber Produktion:
+#     • eigene Container-Namen   (emis-lab-*)
+#     • eigene Images            (emis-lab-*:latest)
+#     • eigene Volumes           (cms_data_lab / cms_media_lab)  ← Live-Daten bleiben unberührt
+#     • eigene Subdomain         (lab.designbyems.de)
+#
+#   Der Lab-CMS startet leer und legt beim ersten Start automatisch die
+#   bekannten Beispiel-Projekte an. Zum Testen des Scroll-/Layout-Fixes reicht
+#   das völlig — es ist NICHT der Live-Inhalt (bewusst, zum Schutz der Daten).
+#
+#   In Portainer:  Stacks → Add stack → "Repository"
+#     Repository URL      : <dein GitHub-Repo>
+#     Reference           : refs/heads/lab
+#     Compose path        : docker-compose.lab.yml
+#     Environment variables (siehe unten): PUBLIC_URL, PAYLOAD_SECRET
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: emis-lab-web:latest
+    container_name: emis-lab-web
+    restart: unless-stopped
+    pull_policy: build
+    depends_on:
+      - cms
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4321
+      CMS_INTERNAL_URL: http://payload:3001
+      CMS_PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://lab.designbyems.de}
+    networks:
+      internal:
+        aliases: [astro]
+
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    image: emis-lab-cms:latest
+    container_name: emis-lab-cms
+    restart: unless-stopped
+    pull_policy: build
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      DATABASE_URI: file:/app/data/emi.db
+      MEDIA_DIR: /app/media
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://lab.designbyems.de}
+    volumes:
+      - cms_data_lab:/app/data # SEPARATE Lab-DB – Live-Daten bleiben unberührt
+      - cms_media_lab:/app/media # SEPARATE Lab-Bilder
+    networks:
+      internal:
+        aliases: [payload]
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: emis-lab-proxy
+    restart: unless-stopped
+    depends_on:
+      - web
+      - cms
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - internal
+      - caddy
+    labels:
+      caddy: lab.designbyems.de
+      caddy.reverse_proxy: "{{upstreams 80}}"
+
+networks:
+  internal:
+  caddy:
+    external: true # dasselbe Multi-Tenant-Caddy-Netz wie die Live-Seite
+
+volumes:
+  cms_data_lab:
+  cms_media_lab:

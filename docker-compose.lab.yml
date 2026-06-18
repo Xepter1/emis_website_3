@@ -18,7 +18,12 @@
 #     Repository URL      : <dein GitHub-Repo>
 #     Reference           : refs/heads/lab
 #     Compose path        : docker-compose.lab.yml
-#     Environment variables (siehe unten): PUBLIC_URL, PAYLOAD_SECRET
+#     Environment variables: KEINE nötig — die Lab-Werte stehen unten fest drin.
+#
+#   Hinweis: PUBLIC_URL ist hier fest verdrahtet (nur die öffentliche Lab-Adresse,
+#   nicht geheim). PAYLOAD_SECRET hat einen festen Lab-Default — bewusst nur für
+#   diese Wegwerf-Test-Instanz (Demo-Daten, kein Live-Inhalt). NICHT für die
+#   Live-Seite verwenden.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -37,7 +42,7 @@ services:
       HOST: 0.0.0.0
       PORT: 4321
       CMS_INTERNAL_URL: http://payload:3001
-      CMS_PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://lab.designbyems.de}
+      CMS_PUBLIC_URL: ${PUBLIC_URL:-https://lab.designbyems.de}
     networks:
       internal:
         aliases: [astro]
@@ -53,10 +58,10 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET muss gesetzt sein}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-lab-only-placeholder-secret-not-for-production}
       DATABASE_URI: file:/app/data/emi.db
       MEDIA_DIR: /app/media
-      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL muss gesetzt sein, z. B. https://lab.designbyems.de}
+      PUBLIC_URL: ${PUBLIC_URL:-https://lab.designbyems.de}
     volumes:
       - cms_data_lab:/app/data # SEPARATE Lab-DB – Live-Daten bleiben unberührt
       - cms_media_lab:/app/media # SEPARATE Lab-Bilder

@@ -108,6 +108,12 @@
     scroll-behavior: smooth;
     /* Anker-Sprünge nicht unter die fixe Nav rutschen lassen */
     scroll-padding-top: calc(var(--nav-h) + 1rem);
+    /* Kein horizontales „Gummiband" auf iOS: der eigentliche Scroll-Container
+       ist <html>, nicht <body>. `clip` macht ihn horizontal nicht scrollbar
+       (ohne eigenen Scroll-Container, bricht kein sticky), overscroll-behavior
+       kappt jeden Rest-Bounce. Vertikal bleibt alles wie gehabt. */
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   body {
@@ -122,7 +128,8 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   /* Echte Typo-Details: deutsche Anführungszeichen erbt der Browser über lang="de" */

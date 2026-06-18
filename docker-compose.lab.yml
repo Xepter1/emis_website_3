@@ -1,29 +1,31 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# LAB / TEST-Stack  ·  vollständig getrennt von der Produktion
+# LAB / TEST-Stack  ·  einfachste Variante: nur ein Port, kein DNS, kein Caddy
 #
-#   Zweck: den `lab`-Branch unter einer eigenen Subdomain testen, OHNE die
-#   Live-Seite (designbyems.de) oder deren Inhalte/Bilder anzufassen.
+#   Zweck: den `lab`-Branch schnell am Handy testen, ohne die Live-Seite oder
+#   deren Inhalte anzufassen.
+#
+#   Aufruf nach dem Deploy:   http://<server-ip>:8088
+#   (dieselbe IP, mit der du auch Portainer aufrufst – nur Port 8088)
 #
 #   Isolation gegenüber Produktion:
-#     • eigene Container-Namen   (emis-lab-*)
-#     • eigene Images            (emis-lab-*:latest)
-#     • eigene Volumes           (cms_data_lab / cms_media_lab)  ← Live-Daten bleiben unberührt
-#     • eigene Subdomain         (lab.designbyems.de)
+#     • eigene Container/Images (emis-lab-*)
+#     • eigene Volumes (cms_data_lab / cms_media_lab) → Live-Daten unberührt
+#     • eigener Port 8088 → keine Kollision mit der Live-Seite
 #
-#   Der Lab-CMS startet leer und legt beim ersten Start automatisch die
-#   bekannten Beispiel-Projekte an. Zum Testen des Scroll-/Layout-Fixes reicht
-#   das völlig — es ist NICHT der Live-Inhalt (bewusst, zum Schutz der Daten).
+#   Ins CMS (/admin) musst du NICHT rein – der Lab-CMS legt beim ersten Start
+#   automatisch Demo-Projekte an. Reicht zum Testen von Layout/Scroll.
+#
+#   ┌─ EINZIGE Eingabe in Portainer ────────────────────────────────────────┐
+#   │ Unter "Environment variables" EINE Variable setzen:                    │
+#   │     Name:  PUBLIC_URL                                                   │
+#   │     Value: http://DEINE-SERVER-IP:8088   (z. B. http://49.13.x.x:8088) │
+#   │ Damit laden auch die Bilder. Sonst bleibt der Rest leer.               │
+#   └────────────────────────────────────────────────────────────────────────┘
 #
 #   In Portainer:  Stacks → Add stack → "Repository"
-#     Repository URL      : <dein GitHub-Repo>
-#     Reference           : refs/heads/lab
-#     Compose path        : docker-compose.lab.yml
-#     Environment variables: KEINE nötig — die Lab-Werte stehen unten fest drin.
-#
-#   Hinweis: PUBLIC_URL ist hier fest verdrahtet (nur die öffentliche Lab-Adresse,
-#   nicht geheim). PAYLOAD_SECRET hat einen festen Lab-Default — bewusst nur für
-#   diese Wegwerf-Test-Instanz (Demo-Daten, kein Live-Inhalt). NICHT für die
-#   Live-Seite verwenden.
+#     Repository URL : https://github.com/Xepter1/emis_website_3.git
+#     Reference      : refs/heads/lab
+#     Compose path   : docker-compose.lab.yml
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -42,10 +44,13 @@ services:
       HOST: 0.0.0.0
       PORT: 4321
       CMS_INTERNAL_URL: http://payload:3001
-      CMS_PUBLIC_URL: ${PUBLIC_URL:-https://lab.designbyems.de}
+      # Öffentliche Basis für die Bild-URLs = die Adresse, unter der DU die Seite
+      # aufrufst. Default passt für lokal; auf dem Server in Portainer als
+      # PUBLIC_URL=http://<server-ip>:8088 setzen, sonst laden die Bilder nicht.
+      CMS_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8088}
     networks:
       internal:
-        aliases: [astro]
+        aliases: [astro] # der Proxy (proxy/Caddyfile) spricht das Frontend als astro:4321 an
 
   cms:
     build:
@@ -58,10 +63,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      # Platzhalter-Secret – NUR für diese Wegwerf-Test-Instanz, kein echtes Geheimnis.
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:-lab-only-placeholder-secret-not-for-production}
       DATABASE_URI: file:/app/data/emi.db
       MEDIA_DIR: /app/media
-      PUBLIC_URL: ${PUBLIC_URL:-https://lab.designbyems.de}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8088}
     volumes:
       - cms_data_lab:/app/data # SEPARATE Lab-DB – Live-Daten bleiben unberührt
       - cms_media_lab:/app/media # SEPARATE Lab-Bilder
@@ -80,15 +86,12 @@ services:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
       - internal
-      - caddy
-    labels:
-      caddy: lab.designbyems.de
-      caddy.reverse_proxy: "{{upstreams 80}}"
+    # Der ganze Stack ist nach außen über diesen einen Port erreichbar.
+    ports:
+      - "8088:80"
 
 networks:
   internal:
-  caddy:
-    external: true # dasselbe Multi-Tenant-Caddy-Netz wie die Live-Seite
 
 volumes:
   cms_data_lab:

@@ -1,25 +1,18 @@
 import type { Payload } from 'payload'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
-
-// Ordner mit den mitgelieferten Originalbildern der 5 Bestandsprojekte.
-const ASSETS = path.resolve(dirname, '../../seed-assets')
-
-const MIME: Record<string, string> = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-}
+import { loeserFuerSeed } from '../inhalte/medien'
+import { MEDIEN, coffeecats, platzhalter, velodynamics, xepter, zen } from '../inhalte/projektinhalte'
 
 /**
  * Überträgt die bestehenden Projekte einmalig ins CMS – nur wenn noch keine
  * Projekte existieren. So geht beim Umstieg von den .mdx-Dateien nichts
  * verloren, und ein bereits gepflegtes CMS wird nicht überschrieben.
+ *
+ * Hier steht der GRUNDSTOCK jedes Projekts (Titel, Disziplinen, Farbwelt …).
+ * Alles, was sich später über eine Migration weiterentwickelt hat — Kontext,
+ * Reihenfolge, Texte, Galerien, Videos —, kommt aus `inhalte/projektinhalte`.
+ * Dadurch entsteht bei einer frischen Installation derselbe Stand wie in der
+ * gepflegten Produktion.
  */
 export async function seedIfEmpty(payload: Payload) {
   const existing = await payload.count({ collection: 'projekte' })
@@ -27,66 +20,7 @@ export async function seedIfEmpty(payload: Payload) {
 
   payload.logger.info('🌱 Übertrage die bestehenden Projekte ins CMS …')
 
-  // Bilder nur einmal hochladen, auch wenn sie mehrfach referenziert werden.
-  const cache = new Map<string, number>()
-  const img = async (slug: string, file: string, alt: string): Promise<number> => {
-    const key = `${slug}/${file}`
-    if (cache.has(key)) return cache.get(key)!
-    const filePath = path.join(ASSETS, slug, file)
-    const data = fs.readFileSync(filePath)
-    const ext = path.extname(file).toLowerCase()
-    const doc = await payload.create({
-      collection: 'media',
-      data: { alt },
-      file: { data, mimetype: MIME[ext] || 'image/jpeg', name: file, size: data.length },
-    })
-    cache.set(key, doc.id as number)
-    return doc.id as number
-  }
-
-  // ── CoffeeCats ──────────────────────────────────────────────
-  await payload.create({
-    collection: 'projekte',
-    data: {
-      slug: 'coffeecats',
-      titel: 'CoffeeCats',
-      jahr: '2025',
-      disziplin: ['Corporate Design', 'Logo', 'Packaging'],
-      kurzbeschreibung: 'Branding für ein Katzencafé, vom Logo bis zur Speisekarte.',
-      reihenfolge: 1,
-      ausgezeichnet: true,
-      status: 'live',
-      cover: await img('coffeecats', 'cover.jpg', 'CoffeeCats – Cover'),
-      coverFokus: 'center 58%',
-      heroSeiten: [
-        { bild: await img('coffeecats', '02-tasse.jpg', 'CoffeeCats – Tasse') },
-        { bild: await img('coffeecats', '06-ambiente.jpg', 'CoffeeCats – Ambiente') },
-      ],
-      aufgabe:
-        'CoffeeCats ist ein modernes Cafékonzept mit Fokus auf Ruhe, Genuss und Atmosphäre. Die beiden Hauskatzen Salty & Maple sind Teil der Markenidentität und verleihen dem Café seinen gemütlichen Charakter. Im Rahmen des Projekts entstanden das Corporate Design, verschiedene Anwendungen und eine Speisekarte.',
-      leistung: ['Branding für ein Katzencafé vom Logo bis zur Speisekarte'],
-      welt: {
-        papier: '#fbf4e3',
-        tinte: '#2a1c11',
-        akzent: '#7a4a12',
-        sekundaer: '#a98c5f',
-        linie: '#2a1c1122',
-        stimmung: 'hell',
-      },
-      abschnitte: [
-        { blockType: 'breit', bild: await img('coffeecats', '01-marke.jpg', 'CoffeeCats – Marke') },
-        {
-          blockType: 'duo',
-          bilder: [
-            { bild: await img('coffeecats', '02-tasse.jpg', 'CoffeeCats – Tasse') },
-            { bild: await img('coffeecats', '03-menu.jpg', 'CoffeeCats – Speisekarte') },
-          ],
-        },
-        { blockType: 'voll', bild: await img('coffeecats', '06-ambiente.jpg', 'CoffeeCats – Ambiente') },
-        { blockType: 'voll', bild: await img('coffeecats', '07-katze.jpg', 'CoffeeCats – Katze'), hoch: true },
-      ],
-    },
-  })
+  const bild = loeserFuerSeed(payload)
 
   // ── VeloDynamics ────────────────────────────────────────────
   await payload.create({
@@ -97,17 +31,8 @@ export async function seedIfEmpty(payload: Payload) {
       jahr: '2026',
       disziplin: ['Corporate Design', 'Logo', 'Web'],
       kurzbeschreibung: 'Branding für ein Unternehmensplanspiel.',
-      reihenfolge: 2,
       ausgezeichnet: false,
       status: 'live',
-      cover: await img('velodynamics', 'cover.jpg', 'VeloDynamics – Cover'),
-      coverFokus: 'center 50%',
-      heroSeiten: [
-        { bild: await img('velodynamics', '03-card-a.jpg', 'VeloDynamics – Karte') },
-        { bild: await img('velodynamics', '02-web.jpg', 'VeloDynamics – Web') },
-      ],
-      aufgabe:
-        'Velo Dynamics ist ein Unternehmen, das im Rahmen eines Unternehmensplanspiels an der Hochschule Landshut entwickelt wurde. Ziel des Projekts war es, ein realistisches Unternehmenskonzept inklusive Markenauftritt zu gestalten und professionell zu präsentieren. Für das Projekt entstand ein vollständiges Corporate Design, das die Identität und Werte der Marke visuell transportiert. Dazu gehörten die Entwicklung mehrerer Logoansätze, die Definition eines einheitlichen Farb- und Typografiekonzepts sowie die Gestaltung verschiedener Medien wie Flyer, Werbemittel und Präsentationslayouts. Der Fokus lag dabei auf einem modernen, professionellen und hochwertigen Markenauftritt mit klarer visueller Linie.',
       leistung: ['Logo & Markensystem', 'Geschäftsausstattung', 'Webdesign', 'Plakatkampagne', 'Brand Book'],
       welt: {
         papier: '#0c2419',
@@ -117,18 +42,34 @@ export async function seedIfEmpty(payload: Payload) {
         linie: '#eee7d422',
         stimmung: 'dunkel',
       },
-      abschnitte: [
-        { blockType: 'voll', bild: await img('velodynamics', '01-billboard.jpg', 'VeloDynamics – Billboard') },
-        { blockType: 'breit', bild: await img('velodynamics', '02-web.jpg', 'VeloDynamics – Web') },
-        {
-          blockType: 'duo',
-          bilder: [
-            { bild: await img('velodynamics', '03-card-a.jpg', 'VeloDynamics – Karte A') },
-            { bild: await img('velodynamics', '04-card-b.jpg', 'VeloDynamics – Karte B') },
-          ],
-        },
-        { blockType: 'voll', bild: await img('velodynamics', '05-vk.jpg', 'VeloDynamics – VK') },
-      ],
+      ...(await velodynamics(bild)),
+    },
+  })
+
+  // ── Xepter ──────────────────────────────────────────────────
+  await payload.create({
+    collection: 'projekte',
+    data: {
+      slug: 'xepter',
+      titel: 'Xepter',
+      titelKlickFarbe: '#f3e9ff',
+      jahr: '2026',
+      disziplin: ['Logo', 'Corporate Design'],
+      kurzbeschreibung: 'Logo- & Corporate Design für Webdesign-Unternehmen Xepter',
+      status: 'live',
+      cover: await bild(MEDIEN.xepterCover),
+      coverFokus: 'center',
+      leistung: ['Logo', 'Corporate Design', 'Visitenkarten', 'Geschäftsausstattung'],
+      farbpalette: ['#140033', '#3d0a6b', '#7a2bd6', '#f2e8ff', '#e8d1f5', '#e0abff', '#ffb04d'],
+      welt: {
+        papier: '#1d0f3d',
+        tinte: '#f0eafb',
+        akzent: '#9a5cf6',
+        sekundaer: '#a293c4',
+        linie: '#f0eafb20',
+        stimmung: 'dunkel',
+      },
+      ...(await xepter(bild)),
     },
   })
 
@@ -141,14 +82,10 @@ export async function seedIfEmpty(payload: Payload) {
       jahr: '2025',
       disziplin: ['Editorial', 'Coverdesign', 'Typografie'],
       kurzbeschreibung: 'Coverdesign für ZEN – Das Architektur- & Wohnmagazin.',
-      reihenfolge: 3,
       status: 'live',
-      cover: await img('zen-magazin', 'cover.jpg', 'ZEN – Cover'),
+      cover: await bild(MEDIEN.zenCover),
       coverFokus: 'center 45%',
-      heroSeiten: [
-        { bild: await img('zen-magazin', 'titel-02.png', 'ZEN – Titel 2') },
-        { bild: await img('zen-magazin', 'titel-03.png', 'ZEN – Titel 3') },
-      ],
+      heroSeiten: [{ bild: await bild(MEDIEN.zenTitel2) }, { bild: await bild(MEDIEN.zenTitel3) }],
       leistung: ['Coverdesign'],
       paletteVerbergen: true,
       welt: {
@@ -160,45 +97,41 @@ export async function seedIfEmpty(payload: Payload) {
         stimmung: 'hell',
       },
       abschnitte: [
-        { blockType: 'breit', bild: await img('zen-magazin', 'titel-01.png', 'ZEN – Titel 1') },
+        { blockType: 'breit', bild: await bild(MEDIEN.zenTitel1) },
         {
           blockType: 'duo',
-          bilder: [
-            { bild: await img('zen-magazin', 'titel-02.png', 'ZEN – Titel 2') },
-            { bild: await img('zen-magazin', 'titel-03.png', 'ZEN – Titel 3') },
-          ],
+          bilder: [{ bild: await bild(MEDIEN.zenTitel2) }, { bild: await bild(MEDIEN.zenTitel3) }],
         },
-        { blockType: 'voll', bild: await img('zen-magazin', '01-mockup.jpg', 'ZEN – Mockup') },
+        { blockType: 'voll', bild: await bild(MEDIEN.zenMockup) },
       ],
+      ...(await zen(bild)),
     },
   })
 
-  // ── Xepter ──────────────────────────────────────────────────
+  // ── CoffeeCats ──────────────────────────────────────────────
   await payload.create({
     collection: 'projekte',
     data: {
-      slug: 'xepter',
-      titel: 'Xepter',
-      titelKlickFarbe: '#f3e9ff',
-      kunde: 'Xepter',
-      jahr: '2026',
-      disziplin: ['Logo', 'Corporate Design'],
-      kurzbeschreibung: 'Logo- & Corporate Design für Webdesign-Unternehmen Xepter',
-      reihenfolge: 4,
+      slug: 'coffeecats',
+      titel: 'CoffeeCats',
+      jahr: '2025',
+      disziplin: ['Corporate Design', 'Logo', 'Packaging'],
+      kurzbeschreibung: 'Branding für ein Katzencafé, vom Logo bis zur Speisekarte.',
+      ausgezeichnet: true,
       status: 'live',
-      cover: await img('xepter', 'cover.jpg', 'Xepter – Cover'),
-      coverFokus: 'center',
-      leistung: ['Logo', 'Corporate Design', 'Visitenkarten', 'Geschäftsausstattung'],
-      farbpalette: ['#140033', '#3d0a6b', '#7a2bd6', '#f2e8ff', '#e8d1f5', '#e0abff', '#ffb04d'],
+      cover: await bild(MEDIEN.ccCover),
+      coverFokus: 'center 58%',
+      heroSeiten: [{ bild: await bild(MEDIEN.ccTasse) }, { bild: await bild(MEDIEN.ccAmbiente) }],
+      leistung: ['Branding für ein Katzencafé vom Logo bis zur Speisekarte'],
       welt: {
-        papier: '#1d0f3d',
-        tinte: '#f0eafb',
-        akzent: '#9a5cf6',
-        sekundaer: '#a293c4',
-        linie: '#f0eafb20',
-        stimmung: 'dunkel',
+        papier: '#fbf4e3',
+        tinte: '#2a1c11',
+        akzent: '#7a4a12',
+        sekundaer: '#a98c5f',
+        linie: '#2a1c1122',
+        stimmung: 'hell',
       },
-      abschnitte: [{ blockType: 'breit', bild: await img('xepter', 'logo.png', 'Xepter – Logo') }],
+      ...(await coffeecats(bild)),
     },
   })
 
@@ -211,9 +144,8 @@ export async function seedIfEmpty(payload: Payload) {
       jahr: '2025',
       disziplin: ['Kostenloses Erstgespräch'],
       kurzbeschreibung: 'Hier könnte dein Projekt sein.',
-      reihenfolge: 5,
       status: 'in-arbeit',
-      cover: await img('in-arbeit-editorial', 'erstgespraech.jpg', 'Erstgespräch'),
+      cover: await bild(MEDIEN.erstgespraech),
       aktion: { label: 'Erstgespräch vereinbaren', href: '/kontakt' },
       welt: {
         papier: '#dcdedb',
@@ -222,6 +154,7 @@ export async function seedIfEmpty(payload: Payload) {
         sekundaer: '#8c938a',
         stimmung: 'hell',
       },
+      ...(await platzhalter(bild)),
     },
   })
 

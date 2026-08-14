@@ -32,6 +32,18 @@ export type CmsBild = {
   srcset?: string;
 };
 
+/** Bewegtbild im Eindrucks-Streifen oben auf der Projektseite. */
+export type CmsVideo = {
+  src: string;
+  poster?: string;
+  /** Beschreibung aus der Mediathek — für Screenreader. */
+  alt?: string;
+  /** „mitte" = zwischen den beiden Seitenbildern, „ganze-breite" = allein als Band. */
+  platzierung: 'mitte' | 'ganze-breite';
+  /** „einmal" = einmal durchlaufen + Neustart-Button, „schleife" = Endlosschleife. */
+  modus: 'einmal' | 'schleife';
+};
+
 export type Welt = {
   papier: string;
   tinte: string;
@@ -51,6 +63,7 @@ export type Abschnitt =
 export type ProjektData = {
   titel: string;
   titelKlickFarbe?: string;
+  kontext?: string;
   kunde?: string;
   jahr: string;
   disziplin: string[];
@@ -62,6 +75,7 @@ export type ProjektData = {
   cover?: CmsBild;
   coverFokus?: string;
   heroSeiten?: CmsBild[];
+  heroVideo?: CmsVideo;
   welt: Welt;
   einleitung?: string;
   aufgabe?: string;
@@ -135,6 +149,19 @@ function mapProjekt(doc: any): Projekt {
     .map((h: any) => mapBild(h.bild, doc.titel))
     .filter(Boolean) as CmsBild[];
 
+  // Video im Streifen — nur wenn wirklich eine Datei hinterlegt ist.
+  const hv = doc.heroVideo;
+  const heroVideo: CmsVideo | undefined =
+    hv && hv.video && typeof hv.video === 'object'
+      ? {
+          src: abs(hv.video.url),
+          poster: hv.poster && typeof hv.poster === 'object' ? abs(hv.poster.url) : undefined,
+          alt: hv.video.alt || undefined,
+          platzierung: hv.platzierung === 'ganze-breite' ? 'ganze-breite' : 'mitte',
+          modus: hv.modus === 'schleife' ? 'schleife' : 'einmal',
+        }
+      : undefined;
+
   // Farbpalette: verbergen → [] (blendet aus); eigene Werte → diese;
   // sonst undefined (Seite leitet aus der Farbwelt ab) – exakt wie bisher.
   let farbpalette: string[] | undefined;
@@ -153,6 +180,7 @@ function mapProjekt(doc: any): Projekt {
     data: {
       titel: doc.titel,
       titelKlickFarbe: doc.titelKlickFarbe || undefined,
+      kontext: doc.kontext || undefined,
       kunde: doc.kunde || undefined,
       jahr: String(doc.jahr),
       disziplin: doc.disziplin || [],
@@ -164,6 +192,7 @@ function mapProjekt(doc: any): Projekt {
       cover: mapBild(doc.cover, doc.titel),
       coverFokus: doc.coverFokus || undefined,
       heroSeiten: hero.length === 2 ? hero : undefined,
+      heroVideo,
       welt: doc.welt,
       einleitung: doc.einleitung || undefined,
       aufgabe: doc.aufgabe || undefined,

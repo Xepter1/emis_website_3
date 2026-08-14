@@ -1,6 +1,7 @@
 ---
 import { getLiveProjekte } from "../../lib/cms";
 import CmsBild from "../../components/CmsBild.astro";
+import CmsVideo from "../../components/CmsVideo.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 // SSR: das Projekt wird live aus dem CMS geholt. Nur live-Projekte bekommen eine
@@ -28,7 +29,22 @@ const palette = (
   [d.welt.papier, d.welt.tinte, d.welt.akzent, d.welt.sekundaer]
 ).filter(Boolean) as string[];
 
+// Videos taugen nicht als Vorschaubild — dort immer das Cover (ein Standbild).
 const ogBild = d.cover?.src;
+
+// ── Eindrucks-Streifen oben ─────────────────────────────────────────────────
+// Drei Formen: (a) Video allein als Band über die volle Breite, (b) Triptychon
+// mit Cover ODER Video in der Mitte, (c) klassischer großer Hero.
+const videoBand = d.heroVideo?.platzierung === "ganze-breite" ? d.heroVideo : undefined;
+const videoMitte = d.heroVideo?.platzierung === "mitte" ? d.heroVideo : undefined;
+
+// Der Cover-Morph (View Transition von der Startseiten-Kachel) hängt an dem
+// Element, das dasselbe Bild zeigt wie die Kachel. Steht in der Mitte ein
+// Video, wandert der Anker auf das Seitenbild, das dem Cover entspricht.
+const istCover = (b?: { src: string }) => !!b && !!d.cover && b.src === d.cover.src;
+const ankerLinks = !!videoMitte && istCover(d.heroSeiten?.[0]);
+const ankerRechts = !!videoMitte && !ankerLinks && istCover(d.heroSeiten?.[1]);
+const morphName = `cover-${p.id}`;
 ---
 
 <BaseLayout
@@ -41,45 +57,106 @@ const ogBild = d.cover?.src;
   <article class="welt" data-stimmung={d.welt.stimmung}>
     <!-- ============== HERO (morpht aus der Übersicht) ============== -->
     {
-      d.heroSeiten ? (
-        // Triptychon: Cover in der Mitte (morpht), zwei Eindrücke links & rechts.
+      videoBand ? (
+        // Band: ein einziges Bewegtbild über die volle Breite. Bewusst flach
+        // beschnitten — in voller 16:9-Höhe würde der Kopf der Seite
+        // unverhältnismäßig hoch. Der Inhalt sitzt mittig, der Beschnitt oben
+        // und unten ist dadurch unkritisch.
+        <figure class="case-hero-band" transition:name={morphName}>
+          <CmsVideo
+            src={videoBand.src}
+            poster={videoBand.poster}
+            modus={videoBand.modus}
+            label={videoBand.alt ?? `${d.titel} — Bewegtbild`}
+          />
+        </figure>
+      ) : d.heroSeiten ? (
+        // Triptychon: in der Mitte das Cover (morpht) oder ein Video, links &
+        // rechts zwei Eindrücke.
         <div class="case-hero-trio">
-          <figure class="case-hero-trio__seite case-hero-trio__seite--links" data-reveal>
-            <CmsBild
-              bild={d.heroSeiten[0]}
-              alt={`${d.titel} — Eindruck`}
-              sizes="(max-width: 820px) 48vw, 28vw"
-              class="case-hero-trio__bild"
-            />
-          </figure>
-          <figure class="case-hero-trio__mitte" transition:name={`cover-${p.id}`}>
-            {d.cover && (
+          {ankerLinks ? (
+            <figure
+              class="case-hero-trio__seite case-hero-trio__seite--links case-hero-trio__seite--anker"
+              transition:name={morphName}
+            >
               <CmsBild
-                bild={d.cover}
+                bild={d.heroSeiten[0]}
                 alt={`${d.titel}, ${d.disziplin[0]}`}
-                sizes="(max-width: 820px) 100vw, 44vw"
+                sizes="(max-width: 820px) 48vw, 28vw"
                 class="case-hero-trio__bild"
                 style={`object-position:${d.coverFokus ?? "center"}`}
                 loading="eager"
                 fetchpriority="high"
               />
-            )}
-          </figure>
-          <figure
-            class="case-hero-trio__seite case-hero-trio__seite--rechts"
-            data-reveal
-            style="--reveal-delay:.1s"
-          >
-            <CmsBild
-              bild={d.heroSeiten[1]}
-              alt={`${d.titel} — Eindruck`}
-              sizes="(max-width: 820px) 48vw, 28vw"
-              class="case-hero-trio__bild"
-            />
-          </figure>
+            </figure>
+          ) : (
+            <figure class="case-hero-trio__seite case-hero-trio__seite--links" data-reveal>
+              <CmsBild
+                bild={d.heroSeiten[0]}
+                alt={`${d.titel} — Eindruck`}
+                sizes="(max-width: 820px) 48vw, 28vw"
+                class="case-hero-trio__bild"
+              />
+            </figure>
+          )}
+
+          {videoMitte ? (
+            <figure class="case-hero-trio__mitte">
+              <CmsVideo
+                src={videoMitte.src}
+                poster={videoMitte.poster}
+                modus={videoMitte.modus}
+                label={videoMitte.alt ?? `${d.titel} — Bewegtbild`}
+              />
+            </figure>
+          ) : (
+            <figure class="case-hero-trio__mitte" transition:name={morphName}>
+              {d.cover && (
+                <CmsBild
+                  bild={d.cover}
+                  alt={`${d.titel}, ${d.disziplin[0]}`}
+                  sizes="(max-width: 820px) 100vw, 44vw"
+                  class="case-hero-trio__bild"
+                  style={`object-position:${d.coverFokus ?? "center"}`}
+                  loading="eager"
+                  fetchpriority="high"
+                />
+              )}
+            </figure>
+          )}
+
+          {ankerRechts ? (
+            <figure
+              class="case-hero-trio__seite case-hero-trio__seite--rechts case-hero-trio__seite--anker"
+              transition:name={morphName}
+            >
+              <CmsBild
+                bild={d.heroSeiten[1]}
+                alt={`${d.titel}, ${d.disziplin[0]}`}
+                sizes="(max-width: 820px) 48vw, 28vw"
+                class="case-hero-trio__bild"
+                style={`object-position:${d.coverFokus ?? "center"}`}
+                loading="eager"
+                fetchpriority="high"
+              />
+            </figure>
+          ) : (
+            <figure
+              class="case-hero-trio__seite case-hero-trio__seite--rechts"
+              data-reveal
+              style="--reveal-delay:.1s"
+            >
+              <CmsBild
+                bild={d.heroSeiten[1]}
+                alt={`${d.titel} — Eindruck`}
+                sizes="(max-width: 820px) 48vw, 28vw"
+                class="case-hero-trio__bild"
+              />
+            </figure>
+          )}
         </div>
       ) : (
-        <figure class="case-hero" transition:name={`cover-${p.id}`}>
+        <figure class="case-hero" transition:name={morphName}>
           {d.cover && (
             <CmsBild
               bild={d.cover}
@@ -126,6 +203,16 @@ const ogBild = d.cover?.src;
     <section class="case-meta huelle" data-reveal aria-label="Projektdaten">
       <dl class="case-meta__grid">
         {
+          d.kontext && (
+            <div class="case-meta__zelle">
+              <dt class="eyebrow">Kontext</dt>
+              <dd>{d.kontext}</dd>
+            </div>
+          )
+        }
+        {
+          /* „Kunde" nur, wenn der Auftraggeber nicht schon im Titel steht —
+             sonst stünde dieselbe Angabe zweimal untereinander. */
           d.kunde && (
             <div class="case-meta__zelle">
               <dt class="eyebrow">Kunde</dt>
@@ -278,6 +365,17 @@ const ogBild = d.cover?.src;
     object-fit: cover;
   }
 
+  /* ---------- HERO-BAND (ein Bewegtbild über die volle Breite) ---------- */
+  .case-hero-band {
+    margin: 0;
+    width: 100%;
+    /* Flaches Band: das 16:9-Video wird oben und unten beschnitten. In voller
+       Höhe geriete der Kopf der Seite unverhältnismäßig hoch. */
+    height: clamp(36vh, 30vh + 9vw, 54vh);
+    overflow: hidden;
+    background: color-mix(in oklab, var(--welt-tinte) 8%, var(--welt-papier));
+  }
+
   /* ---------- HERO-TRIPTYCHON (Cover Mitte, Eindrücke links & rechts) ---------- */
   .case-hero-trio {
     display: grid;
@@ -310,6 +408,12 @@ const ogBild = d.cover?.src;
      im Passepartout. Die Mitte bleibt formatfüllend (sauberer Morph). */
   .case-hero-trio__seite .case-hero-trio__bild {
     object-fit: contain;
+  }
+  /* Ausnahme: Steht in der Mitte ein Video, übernimmt ein Seitenbild die Rolle
+     des Cover-Morphs. Es bleibt formatfüllend — sonst spränge der Übergang von
+     „beschnitten" (Kachel) auf „eingepasst". */
+  .case-hero-trio__seite--anker .case-hero-trio__bild {
+    object-fit: cover;
   }
 
   @media (max-width: 820px) {

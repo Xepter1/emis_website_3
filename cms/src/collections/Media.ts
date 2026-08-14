@@ -5,18 +5,20 @@ import { fileURLToPath } from 'url'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// Zentrale Medien-Bibliothek: alle Bilder der Projekte.
-// Dateien werden lokal unter /media abgelegt; Payload erzeugt automatisch
-// responsive Größen (wie Astros Bild-Pipeline, nur eben aus dem CMS).
+// Zentrale Medien-Bibliothek: alle Bilder UND Videos der Projekte.
+// Dateien werden lokal unter /media abgelegt; Payload erzeugt bei Bildern
+// automatisch responsive Größen (wie Astros Bild-Pipeline, nur eben aus dem
+// CMS). Videos werden unverändert durchgereicht – sie liegen bereits
+// web-optimiert vor (MP4/H.264, stumm) und dürfen nicht neu gerechnet werden.
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: {
-    singular: 'Bild',
-    plural: 'Bilder',
+    singular: 'Medium',
+    plural: 'Medien',
   },
   admin: {
     group: 'Inhalte',
-    description: 'Alle Bilder zum Wiederverwenden in Projekten.',
+    description: 'Alle Bilder und Videos zum Wiederverwenden in Projekten.',
   },
   access: {
     read: () => true, // öffentlich lesbar (für die Website)
@@ -24,7 +26,7 @@ export const Media: CollectionConfig = {
   upload: {
     // In Produktion/Docker per MEDIA_DIR auf ein persistentes Volume zeigen.
     staticDir: process.env.MEDIA_DIR || path.resolve(dirname, '../../media'),
-    mimeTypes: ['image/*'],
+    mimeTypes: ['image/*', 'video/mp4'],
     // Responsive Größen — decken die Breakpoints des Frontends ab
     // (Cover/Hero/Galerie). Astro/Browser wählt per srcset die passende.
     imageSizes: [

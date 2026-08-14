@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LAB / TEST-Stack  ·  einfachste Variante: nur ein Port, kein DNS, kein Caddy
+#
+#   Zweck: den `lab`-Branch schnell am Handy testen, ohne die Live-Seite oder
+#   deren Inhalte anzufassen.
+#
+#   Aufruf nach dem Deploy:   http://<server-ip>:8088
+#   (dieselbe IP, mit der du auch Portainer aufrufst – nur Port 8088)
+#
+#   Isolation gegenüber Produktion:
+#     • eigene Container/Images (emis-lab-*)
+#     • eigene Volumes (cms_data_lab / cms_media_lab) → Live-Daten unberührt
+#     • eigener Port 8088 → keine Kollision mit der Live-Seite
+#
+#   Ins CMS (/admin) musst du NICHT rein – der Lab-CMS legt beim ersten Start
+#   automatisch Demo-Projekte an. Reicht zum Testen von Layout/Scroll.
+#
+#   ┌─ EINZIGE Eingabe in Portainer ────────────────────────────────────────┐
+#   │ Unter "Environment variables" EINE Variable setzen:                    │
+#   │     Name:  PUBLIC_URL                                                   │
+#   │     Value: http://DEINE-SERVER-IP:8088   (z. B. http://49.13.x.x:8088) │
+#   │ Damit laden auch die Bilder. Sonst bleibt der Rest leer.               │
+#   └────────────────────────────────────────────────────────────────────────┘
+#
+#   In Portainer:  Stacks → Add stack → "Repository"
+#     Repository URL : https://github.com/Xepter1/emis_website_3.git
+#     Reference      : refs/heads/lab
+#     Compose path   : docker-compose.lab.yml
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: emis-lab-web:latest
+    container_name: emis-lab-web
+    restart: unless-stopped
+    pull_policy: build
+    depends_on:
+      - cms
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4321
+      CMS_INTERNAL_URL: http://payload:3001
+      # Öffentliche Basis für die Bild-URLs = die Adresse, unter der DU die Seite
+      # aufrufst. Default passt für lokal; auf dem Server in Portainer als
+      # PUBLIC_URL=http://<server-ip>:8088 setzen, sonst laden die Bilder nicht.
+      CMS_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8088}
+    networks:
+      internal:
+        aliases: [astro] # der Proxy (proxy/Caddyfile) spricht das Frontend als astro:4321 an
+
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    image: emis-lab-cms:latest
+    container_name: emis-lab-cms
+    restart: unless-stopped
+    pull_policy: build
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # Platzhalter-Secret – NUR für diese Wegwerf-Test-Instanz, kein echtes Geheimnis.
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-lab-only-placeholder-secret-not-for-production}
+      DATABASE_URI: file:/app/data/emi.db
+      MEDIA_DIR: /app/media
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8088}
+    volumes:
+      - cms_data_lab:/app/data # SEPARATE Lab-DB – Live-Daten bleiben unberührt
+      - cms_media_lab:/app/media # SEPARATE Lab-Bilder
+    networks:
+      internal:
+        aliases: [payload]
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: emis-lab-proxy
+    restart: unless-stopped
+    depends_on:
+      - web
+      - cms
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - internal
+    # Der ganze Stack ist nach außen über diesen einen Port erreichbar.
+    ports:
+      - "8088:80"
+
+networks:
+  internal:
+
+volumes:
+  cms_data_lab:
+  cms_media_lab:

@@ -116,23 +116,23 @@ export async function velodynamics(l: MedienLoeser) {
     heroVideo: {
       video: await l(MEDIEN.veloBrandbookVideo),
       poster: await l(MEDIEN.veloBrandbookPoster),
-      platzierung: 'mitte',
-      modus: 'einmal',
+      platzierung: 'mitte' as const,
+      modus: 'einmal' as const,
     },
     aufgabe:
       'Velo Dynamics ist ein Unternehmenskonzept, das im Rahmen eines Unternehmensplanspiels an der Hochschule Landshut entstand. Ich wurde beauftragt, dafür den vollständigen Markenauftritt zu gestalten. Es entstand ein vollständiges Corporate Design, das die Identität und Werte der Marke visuell transportiert. Dazu gehörten die Entwicklung mehrerer Logoansätze, die Definition eines einheitlichen Farb- und Typografiekonzepts sowie die Gestaltung verschiedener Medien wie Flyer, Werbemittel und Präsentationslayouts. Der Fokus lag dabei auf einem modernen, professionellen und hochwertigen Markenauftritt mit klarer visueller Linie.',
     abschnitte: [
       {
-        blockType: 'duo',
+        blockType: 'duo' as const,
         bilder: [
           { bild: await l(MEDIEN.veloBrandbookCover) },
           { bild: await l(MEDIEN.veloBrandbookKompromiss) },
         ],
       },
-      { blockType: 'voll', bild: await l(MEDIEN.veloBrandbookAtmosphaere) },
-      { blockType: 'breit', bild: await l(MEDIEN.veloVisitenkarte) },
+      { blockType: 'voll' as const, bild: await l(MEDIEN.veloBrandbookAtmosphaere) },
+      { blockType: 'breit' as const, bild: await l(MEDIEN.veloVisitenkarte) },
       {
-        blockType: 'duo',
+        blockType: 'duo' as const,
         bilder: [{ bild: await l(MEDIEN.veloBillboard) }, { bild: await l(MEDIEN.veloWeb) }],
       },
     ],
@@ -152,17 +152,17 @@ export async function xepter(l: MedienLoeser) {
     heroVideo: {
       video: await l(MEDIEN.xepterLogoVideo),
       poster: await l(MEDIEN.xepterLogoPoster),
-      platzierung: 'ganze-breite',
-      modus: 'schleife',
+      platzierung: 'ganze-breite' as const,
+      modus: 'schleife' as const,
     },
     abschnitte: [
       {
-        blockType: 'duo',
+        blockType: 'duo' as const,
         bilder: [{ bild: await l(MEDIEN.xepterLogo) }, { bild: await l(MEDIEN.xepterCover) }],
       },
       // Die Signatur ist etwa 5:1 — als „breit" läuft sie über die volle
       // Rasterbreite, ohne beschnitten zu werden.
-      { blockType: 'breit', bild: await l(MEDIEN.xepterSignatur) },
+      { blockType: 'breit' as const, bild: await l(MEDIEN.xepterSignatur) },
     ],
   }
 }
@@ -184,12 +184,12 @@ export async function coffeecats(l: MedienLoeser) {
       'CoffeeCats ist ein fiktives Cafékonzept mit Fokus auf Ruhe, Genuss und Atmosphäre. Die beiden Hauskatzen Salty & Maple sind Teil der Markenidentität und verleihen dem Café seinen gemütlichen Charakter. Die Aufgabe im Grafikdesign-Lehrgang umfasste den Logoentwurf – das Corporate Design, die Anwendungen und die Speisekarte habe ich darüber hinaus selbst erarbeitet, um die Marke einmal vollständig durchzuspielen.',
     // Das Hochformat-Einzelbild (07-katze.jpg) am Ende entfällt.
     abschnitte: [
-      { blockType: 'breit', bild: await l(MEDIEN.ccMarke) },
+      { blockType: 'breit' as const, bild: await l(MEDIEN.ccMarke) },
       {
-        blockType: 'duo',
+        blockType: 'duo' as const,
         bilder: [{ bild: await l(MEDIEN.ccTasse) }, { bild: await l(MEDIEN.ccMenu) }],
       },
-      { blockType: 'voll', bild: await l(MEDIEN.ccAmbiente) },
+      { blockType: 'voll' as const, bild: await l(MEDIEN.ccAmbiente) },
     ],
   }
 }

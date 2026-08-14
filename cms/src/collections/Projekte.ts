@@ -50,9 +50,22 @@ export const Projekte: CollectionConfig = {
       },
     },
     {
+      name: 'kontext',
+      type: 'text',
+      label: 'Kontext',
+      admin: {
+        description:
+          'Art des Projekts – erscheint als erste Spalte der Metazeile. z. B. „Kundenauftrag“ oder „Konzeptarbeit“.',
+      },
+    },
+    {
       name: 'kunde',
       type: 'text',
       label: 'Kunde (optional)',
+      admin: {
+        description:
+          'Nur ausfüllen, wenn der Auftraggeber NICHT schon im Titel steht. Leer = die Spalte erscheint gar nicht.',
+      },
     },
     {
       name: 'kurzbeschreibung',
@@ -102,6 +115,58 @@ export const Projekte: CollectionConfig = {
           relationTo: 'media',
           required: true,
           label: 'Bild',
+        },
+      ],
+    },
+    {
+      name: 'heroVideo',
+      type: 'group',
+      label: 'Video im Eindrucks-Streifen (optional)',
+      admin: {
+        description:
+          'Bewegtbild oben auf der Projektseite. Leer lassen = Streifen bleibt rein aus Bildern.',
+      },
+      fields: [
+        {
+          name: 'video',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Video (MP4, stumm)',
+          admin: { description: 'Bereits web-optimiert hochladen – es wird nicht neu gerechnet.' },
+        },
+        {
+          name: 'poster',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Standbild (Poster)',
+          admin: {
+            description:
+              'Wird gezeigt, solange das Video lädt – und bei „Bewegung reduzieren“ statt des Videos. Videos taugen nicht als Cover/Vorschaubild, dafür immer ein Standbild.',
+          },
+        },
+        {
+          name: 'platzierung',
+          type: 'select',
+          label: 'Platzierung',
+          defaultValue: 'mitte',
+          options: [
+            { label: 'In der Mitte des Streifens (zwischen zwei Bildern)', value: 'mitte' },
+            { label: 'Alleine über die volle Breite', value: 'ganze-breite' },
+          ],
+        },
+        {
+          name: 'modus',
+          type: 'select',
+          label: 'Abspielverhalten',
+          defaultValue: 'einmal',
+          options: [
+            { label: 'Einmal durchlaufen, danach Neustart-Button', value: 'einmal' },
+            { label: 'Endlosschleife', value: 'schleife' },
+          ],
+          admin: {
+            description:
+              'Beide starten erst, wenn das Video beim Scrollen sichtbar wird – nie beim Laden der Seite.',
+          },
         },
       ],
     },

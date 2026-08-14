@@ -132,6 +132,13 @@ export interface Projekte {
    * Hex-Farbe, die der Titel auf der Projektseite per Klick annimmt (kleines Detail, z. B. Xepter). Leer = nicht klickbar.
    */
   titelKlickFarbe?: string | null;
+  /**
+   * Art des Projekts – erscheint als erste Spalte der Metazeile. z. B. „Kundenauftrag“ oder „Konzeptarbeit“.
+   */
+  kontext?: string | null;
+  /**
+   * Nur ausfüllen, wenn der Auftraggeber NICHT schon im Titel steht. Leer = die Spalte erscheint gar nicht.
+   */
   kunde?: string | null;
   /**
    * 1–2 Sätze für Übersicht & Vorschau.
@@ -158,6 +165,24 @@ export interface Projekte {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Bewegtbild oben auf der Projektseite. Leer lassen = Streifen bleibt rein aus Bildern.
+   */
+  heroVideo?: {
+    /**
+     * Bereits web-optimiert hochladen – es wird nicht neu gerechnet.
+     */
+    video?: (number | null) | Media;
+    /**
+     * Wird gezeigt, solange das Video lädt – und bei „Bewegung reduzieren“ statt des Videos. Videos taugen nicht als Cover/Vorschaubild, dafür immer ein Standbild.
+     */
+    poster?: (number | null) | Media;
+    platzierung?: ('mitte' | 'ganze-breite') | null;
+    /**
+     * Beide starten erst, wenn das Video beim Scrollen sichtbar wird – nie beim Laden der Seite.
+     */
+    modus?: ('einmal' | 'schleife') | null;
+  };
   /**
    * Der eine ruhige Eröffnungssatz.
    */
@@ -254,7 +279,7 @@ export interface Projekte {
   createdAt: string;
 }
 /**
- * Alle Bilder zum Wiederverwenden in Projekten.
+ * Alle Bilder und Videos zum Wiederverwenden in Projekten.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -438,6 +463,7 @@ export interface PayloadMigration {
 export interface ProjekteSelect<T extends boolean = true> {
   titel?: T;
   titelKlickFarbe?: T;
+  kontext?: T;
   kunde?: T;
   kurzbeschreibung?: T;
   disziplin?: T;
@@ -448,6 +474,14 @@ export interface ProjekteSelect<T extends boolean = true> {
     | {
         bild?: T;
         id?: T;
+      };
+  heroVideo?:
+    | T
+    | {
+        video?: T;
+        poster?: T;
+        platzierung?: T;
+        modus?: T;
       };
   einleitung?: T;
   aufgabe?: T;

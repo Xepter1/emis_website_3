@@ -1,0 +1,316 @@
+---
+/**
+ * CMSVIDEO — Bewegtbild im Eindrucks-Streifen der Projektseiten.
+ *
+ * Regeln (bewusst zurückhaltend, der Rahmen bleibt leise):
+ *  • Startet NIE beim Laden der Seite, sondern erst, wenn das Element beim
+ *    Scrollen sichtbar wird.
+ *  • „einmal"   – läuft einmal durch, danach zurück aufs Standbild mit
+ *                 deutlich sichtbarem Neustart-Button.
+ *  • „schleife" – läuft stumm in Endlosschleife; außerhalb des Sichtfelds
+ *                 pausiert sie (spart Akku, für den Blick unsichtbar).
+ *  • Anhalten ist immer möglich: dezent beim Überfahren, dauerhaft sichtbar
+ *    bei Tastaturfokus und auf Touch-Geräten. Automatisch bewegte Inhalte
+ *    über 5 Sekunden MÜSSEN anhaltbar sein (WCAG 2.2.2) — das gilt für die
+ *    Endlosschleife genauso wie für den einmaligen Durchlauf.
+ *  • Keine Browser-Bedienleiste, keine Lautstärke (die Dateien sind tonlos).
+ *  • „Bewegung reduzieren" (prefers-reduced-motion): nur das Standbild, kein
+ *    automatisches Abspielen — Bewegung dann ausschließlich auf Zuruf.
+ */
+interface Props {
+  src: string;
+  poster?: string;
+  modus?: 'einmal' | 'schleife';
+  /** Beschreibt den Inhalt für Screenreader, z. B. „VeloDynamics — Brandbook". */
+  label: string;
+  class?: string;
+}
+
+const { src, poster, modus = 'einmal', label, class: klasse } = Astro.props;
+---
+
+<div
+  class:list={['cmsvideo', klasse]}
+  data-cmsvideo
+  data-modus={modus}
+  data-zustand="ruht"
+>
+  <video
+    class="cmsvideo__el"
+    poster={poster}
+    muted
+    playsinline
+    preload="none"
+    loop={modus === 'schleife'}
+    aria-label={label}
+  >
+    <source src={src} type="video/mp4" />
+  </video>
+
+  <!-- Dezent: hält das Laufende an bzw. setzt es fort. -->
+  <button type="button" class="cmsvideo__halt" data-halt aria-label="Video anhalten">
+    <span class="cmsvideo__halt-zeichen" aria-hidden="true"></span>
+  </button>
+
+  <!-- Deutlich: Neustart nach dem Durchlauf, Start bei reduzierter Bewegung. -->
+  <button type="button" class="cmsvideo__start" data-start>
+    <span class="cmsvideo__start-zeichen" aria-hidden="true"></span>
+    <span data-start-text>Erneut abspielen</span>
+  </button>
+</div>
+
+<style>
+  .cmsvideo {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--welt-tinte) 8%, var(--welt-papier));
+  }
+  .cmsvideo__el {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ---------- Dezenter Halt/Weiter-Knopf ---------- */
+  .cmsvideo__halt {
+    position: absolute;
+    top: clamp(0.6rem, 1.4vw, 1.1rem);
+    right: clamp(0.6rem, 1.4vw, 1.1rem);
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--welt-papier);
+    background: color-mix(in oklab, var(--welt-tinte) 55%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border: 1px solid color-mix(in oklab, var(--welt-papier) 30%, transparent);
+    opacity: 0;
+    transition:
+      opacity 0.4s var(--ease-ruhig),
+      background-color 0.4s var(--ease-ruhig);
+  }
+  /* Sichtbar beim Überfahren, bei Tastaturfokus — und dauerhaft, sobald der
+     Besucher selbst angehalten hat (sonst wäre das Weiter nicht auffindbar). */
+  .cmsvideo:hover .cmsvideo__halt,
+  .cmsvideo__halt:focus-visible,
+  .cmsvideo[data-zustand='pausiert'] .cmsvideo__halt {
+    opacity: 1;
+  }
+  .cmsvideo__halt:hover {
+    background: color-mix(in oklab, var(--welt-tinte) 78%, transparent);
+  }
+  /* Ohne Hover (Touch) gibt es kein Überfahren — dann dauerhaft zeigen. */
+  @media (hover: none) {
+    .cmsvideo[data-zustand='laeuft'] .cmsvideo__halt {
+      opacity: 1;
+    }
+  }
+  /* Nur sinnvoll, solange etwas läuft oder angehalten ist. */
+  .cmsvideo[data-zustand='ruht'] .cmsvideo__halt,
+  .cmsvideo[data-zustand='bereit'] .cmsvideo__halt,
+  .cmsvideo[data-zustand='beendet'] .cmsvideo__halt {
+    display: none;
+  }
+
+  /* Pausenzeichen (zwei Balken) → Abspielzeichen (Dreieck), wenn angehalten. */
+  .cmsvideo__halt-zeichen {
+    width: 0.62rem;
+    height: 0.8rem;
+    border-left: 3px solid currentColor;
+    border-right: 3px solid currentColor;
+  }
+  .cmsvideo[data-zustand='pausiert'] .cmsvideo__halt-zeichen {
+    width: 0;
+    height: 0;
+    border: 0;
+    border-left: 0.72rem solid currentColor;
+    border-top: 0.44rem solid transparent;
+    border-bottom: 0.44rem solid transparent;
+    margin-left: 0.2rem;
+  }
+
+  /* ---------- Deutlicher Start/Neustart ---------- */
+  .cmsvideo__start {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: fit-content;
+    height: fit-content;
+    display: none;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    padding: 0.75em 1.35em;
+    border-radius: 100px;
+    font-size: var(--text-klein);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--welt-tinte);
+    background: color-mix(in oklab, var(--welt-papier) 88%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border: 1px solid color-mix(in oklab, var(--welt-tinte) 22%, transparent);
+    transition:
+      background-color 0.4s var(--ease-ruhig),
+      color 0.4s var(--ease-ruhig);
+  }
+  .cmsvideo[data-zustand='bereit'] .cmsvideo__start,
+  .cmsvideo[data-zustand='beendet'] .cmsvideo__start {
+    display: inline-flex;
+  }
+  .cmsvideo__start:hover {
+    background: var(--welt-tinte);
+    color: var(--welt-papier);
+  }
+  .cmsvideo__start-zeichen {
+    width: 0;
+    height: 0;
+    border-left: 0.66rem solid currentColor;
+    border-top: 0.4rem solid transparent;
+    border-bottom: 0.4rem solid transparent;
+  }
+</style>
+
+<script>
+  // Steuerung der Streifen-Videos. Läuft bei jedem Seitenaufbau neu, also
+  // auch nach View Transitions.
+  function initCmsVideos() {
+    const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    document.querySelectorAll<HTMLElement>('[data-cmsvideo]').forEach((box) => {
+      if (box.dataset.bereit === '1') return; // schon verkabelt
+      box.dataset.bereit = '1';
+
+      const video = box.querySelector('video') as HTMLVideoElement | null;
+      const halt = box.querySelector('[data-halt]') as HTMLButtonElement | null;
+      const start = box.querySelector('[data-start]') as HTMLButtonElement | null;
+      const startText = box.querySelector('[data-start-text]') as HTMLElement | null;
+      if (!video || !halt || !start || !startText) return;
+
+      const schleife = box.dataset.modus === 'schleife';
+      // Tonspur gibt es nicht; stumm ist zusätzlich die Bedingung dafür, dass
+      // Browser das Abspielen ohne Klick überhaupt erlauben.
+      video.muted = true;
+
+      // ruht = Standbild, noch nichts zu bedienen (Ausgangslage, außer Sicht)
+      // bereit = Standbild, Abspielen nur auf Zuruf (blockiert / Bewegung reduziert)
+      // beendet = Standbild nach dem Durchlauf, Neustart angeboten
+      const zustand = (wert: 'ruht' | 'bereit' | 'laeuft' | 'pausiert' | 'beendet') => {
+        box.dataset.zustand = wert;
+        halt.setAttribute(
+          'aria-label',
+          wert === 'pausiert' ? 'Video fortsetzen' : 'Video anhalten',
+        );
+      };
+
+      // Warum wurde zuletzt angehalten? Entscheidet, was danach zu sehen ist.
+      // null = der Browser selbst (Tab im Hintergrund, Energiesparen) — dann
+      // bieten wir das Fortsetzen an, sonst bliebe ein totes Standbild stehen.
+      let grund: 'besucher' | 'ausser-sicht' | null = null;
+      // Merker für den Durchlauf-Ende-Fall: load() setzt `ended` sofort zurück
+      // und kann ein spätes 'pause' nachziehen — das darf den Endzustand
+      // (Standbild + Neustart) nicht wieder überschreiben.
+      let istBeendet = false;
+
+      const abspielen = () =>
+        video
+          .play()
+          // Den Zustand setzen die Ereignisse des Videos (siehe unten) — so
+          // stimmt er auch, wenn der Browser von sich aus anhält.
+          .catch(() => {
+            startText.textContent = 'Abspielen';
+            zustand('bereit');
+          });
+
+      video.addEventListener('play', () => {
+        grund = null;
+        zustand('laeuft');
+      });
+      video.addEventListener('pause', () => {
+        if (video.ended || istBeendet) return; // darum kümmert sich der 'ended'-Fall
+        zustand(grund === 'ausser-sicht' ? 'ruht' : 'pausiert');
+        grund = null;
+      });
+
+      // ── Knöpfe ──
+      halt.addEventListener('click', () => {
+        if (video.paused) {
+          abspielen();
+        } else {
+          grund = 'besucher';
+          video.pause();
+        }
+      });
+
+      start.addEventListener('click', () => {
+        istBeendet = false;
+        video.currentTime = 0;
+        abspielen();
+      });
+
+      // ── Bewegung reduzieren: nur das Standbild, Start auf Zuruf ──
+      if (ruhig) {
+        startText.textContent = 'Abspielen';
+        zustand('bereit');
+        return;
+      }
+
+      // Einmaliger Durchlauf: danach zurück aufs Standbild.
+      if (!schleife) {
+        video.addEventListener('ended', () => {
+          istBeendet = true;
+          // load() setzt das Element zurück und zeigt wieder das Poster —
+          // das „Standbild", auf dem der Neustart-Knopf sitzt.
+          video.load();
+          zustand('beendet');
+        });
+      }
+
+      // ── Start erst beim Sichtbarwerden ──
+      if (!('IntersectionObserver' in window)) {
+        abspielen();
+        return;
+      }
+
+      let liefSchonMal = false;
+      const beobachter = new IntersectionObserver(
+        (eintraege) => {
+          for (const e of eintraege) {
+            if (e.isIntersecting) {
+              // Einmal-Videos starten genau ein Mal von selbst. Danach
+              // entscheidet der Besucher über den Neustart-Knopf.
+              if (!schleife) {
+                if (!liefSchonMal) {
+                  liefSchonMal = true;
+                  abspielen();
+                  beobachter.unobserve(box);
+                }
+                continue;
+              }
+              // Schleife: läuft, solange sie zu sehen ist.
+              if (box.dataset.zustand !== 'pausiert') abspielen();
+            } else if (schleife && box.dataset.zustand === 'laeuft') {
+              // Außer Sicht anhalten — spart Akku, ist für den Blick unsichtbar.
+              grund = 'ausser-sicht';
+              video.pause();
+            }
+          }
+        },
+        { threshold: 0.35 },
+      );
+      beobachter.observe(box);
+
+      // Beim Seitenwechsel aufräumen (verhindert Beobachter-Leichen).
+      document.addEventListener('astro:before-swap', () => beobachter.disconnect(), {
+        once: true,
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initCmsVideos);
+</script>

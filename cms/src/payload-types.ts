@@ -166,7 +166,7 @@ export interface Projekte {
       }[]
     | null;
   /**
-   * Bewegtbild oben auf der Projektseite. Leer lassen = Streifen bleibt rein aus Bildern.
+   * Bewegtbild oben auf der Projektseite. Leer lassen = Streifen bleibt rein aus Bildern. Läuft stumm in Endlosschleife und startet erst, wenn es beim Scrollen sichtbar wird.
    */
   heroVideo?: {
     /**
@@ -178,10 +178,6 @@ export interface Projekte {
      */
     poster?: (number | null) | Media;
     platzierung?: ('mitte' | 'ganze-breite') | null;
-    /**
-     * Beide starten erst, wenn das Video beim Scrollen sichtbar wird – nie beim Laden der Seite.
-     */
-    modus?: ('einmal' | 'schleife') | null;
   };
   /**
    * Der eine ruhige Eröffnungssatz.
@@ -481,7 +477,6 @@ export interface ProjekteSelect<T extends boolean = true> {
         video?: T;
         poster?: T;
         platzierung?: T;
-        modus?: T;
       };
   einleitung?: T;
   aufgabe?: T;

@@ -124,7 +124,7 @@ export const Projekte: CollectionConfig = {
       label: 'Video im Eindrucks-Streifen (optional)',
       admin: {
         description:
-          'Bewegtbild oben auf der Projektseite. Leer lassen = Streifen bleibt rein aus Bildern.',
+          'Bewegtbild oben auf der Projektseite. Leer lassen = Streifen bleibt rein aus Bildern. Läuft stumm in Endlosschleife und startet erst, wenn es beim Scrollen sichtbar wird.',
       },
       fields: [
         {
@@ -153,20 +153,6 @@ export const Projekte: CollectionConfig = {
             { label: 'In der Mitte des Streifens (zwischen zwei Bildern)', value: 'mitte' },
             { label: 'Alleine über die volle Breite', value: 'ganze-breite' },
           ],
-        },
-        {
-          name: 'modus',
-          type: 'select',
-          label: 'Abspielverhalten',
-          defaultValue: 'einmal',
-          options: [
-            { label: 'Einmal durchlaufen, danach Neustart-Button', value: 'einmal' },
-            { label: 'Endlosschleife', value: 'schleife' },
-          ],
-          admin: {
-            description:
-              'Beide starten erst, wenn das Video beim Scrollen sichtbar wird – nie beim Laden der Seite.',
-          },
         },
       ],
     },

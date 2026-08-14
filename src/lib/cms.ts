@@ -40,8 +40,6 @@ export type CmsVideo = {
   alt?: string;
   /** „mitte" = zwischen den beiden Seitenbildern, „ganze-breite" = allein als Band. */
   platzierung: 'mitte' | 'ganze-breite';
-  /** „einmal" = einmal durchlaufen + Neustart-Button, „schleife" = Endlosschleife. */
-  modus: 'einmal' | 'schleife';
 };
 
 export type Welt = {
@@ -158,7 +156,6 @@ function mapProjekt(doc: any): Projekt {
           poster: hv.poster && typeof hv.poster === 'object' ? abs(hv.poster.url) : undefined,
           alt: hv.video.alt || undefined,
           platzierung: hv.platzierung === 'ganze-breite' ? 'ganze-breite' : 'mitte',
-          modus: hv.modus === 'schleife' ? 'schleife' : 'einmal',
         }
       : undefined;
 

@@ -66,17 +66,18 @@ const morphName = `cover-${p.id}`;
           <CmsVideo
             src={videoBand.src}
             poster={videoBand.poster}
-            modus={videoBand.modus}
             label={videoBand.alt ?? `${d.titel} — Bewegtbild`}
           />
         </figure>
       ) : d.heroSeiten ? (
         // Triptychon: in der Mitte das Cover (morpht) oder ein Video, links &
         // rechts zwei Eindrücke.
-        <div class="case-hero-trio">
+        <div
+          class:list={['case-hero-trio', { 'case-hero-trio--fuellend': !!videoMitte }]}
+        >
           {ankerLinks ? (
             <figure
-              class="case-hero-trio__seite case-hero-trio__seite--links case-hero-trio__seite--anker"
+              class="case-hero-trio__seite case-hero-trio__seite--links"
               transition:name={morphName}
             >
               <CmsBild
@@ -105,7 +106,6 @@ const morphName = `cover-${p.id}`;
               <CmsVideo
                 src={videoMitte.src}
                 poster={videoMitte.poster}
-                modus={videoMitte.modus}
                 label={videoMitte.alt ?? `${d.titel} — Bewegtbild`}
               />
             </figure>
@@ -127,7 +127,7 @@ const morphName = `cover-${p.id}`;
 
           {ankerRechts ? (
             <figure
-              class="case-hero-trio__seite case-hero-trio__seite--rechts case-hero-trio__seite--anker"
+              class="case-hero-trio__seite case-hero-trio__seite--rechts"
               transition:name={morphName}
             >
               <CmsBild
@@ -409,10 +409,12 @@ const morphName = `cover-${p.id}`;
   .case-hero-trio__seite .case-hero-trio__bild {
     object-fit: contain;
   }
-  /* Ausnahme: Steht in der Mitte ein Video, übernimmt ein Seitenbild die Rolle
-     des Cover-Morphs. Es bleibt formatfüllend — sonst spränge der Übergang von
-     „beschnitten" (Kachel) auf „eingepasst". */
-  .case-hero-trio__seite--anker .case-hero-trio__bild {
+  /* Ausnahme: Steht in der Mitte ein Video, füllen auch die Seitenbilder ihren
+     Rahmen. Zwei Gründe — eine eingepasste Tafel wirkt neben dem formatfüllenden
+     Video verloren klein, und das Seitenbild, das den Cover-Morph trägt, muss
+     formatfüllend bleiben, sonst spränge der Übergang von „beschnitten"
+     (Kachel) auf „eingepasst". */
+  .case-hero-trio--fuellend .case-hero-trio__bild {
     object-fit: cover;
   }
 

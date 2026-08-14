@@ -47,6 +47,17 @@ const { src, poster, modus = 'einmal', label, class: klasse } = Astro.props;
     <source src={src} type="video/mp4" />
   </video>
 
+  {
+    /* Das Standbild als echtes Bild darüber — NICHT nur als poster-Attribut.
+       Safari zeigt `poster` bei preload="none" nicht zuverlässig an; dort bliebe
+       sonst eine leere Fläche stehen, während Chrome das Bild malt. Als <img>
+       ist das Standbild überall garantiert sichtbar: vor dem Start, nach dem
+       Durchlauf und bei „Bewegung reduzieren". */
+    poster && (
+      <img class="cmsvideo__standbild" src={poster} alt="" aria-hidden="true" />
+    )
+  }
+
   <!-- Dezent: hält das Laufende an bzw. setzt es fort. -->
   <button type="button" class="cmsvideo__halt" data-halt aria-label="Video anhalten">
     <span class="cmsvideo__halt-zeichen" aria-hidden="true"></span>
@@ -71,6 +82,21 @@ const { src, poster, modus = 'einmal', label, class: klasse } = Astro.props;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  /* Liegt deckungsgleich über dem Video und weicht, sobald wirklich etwas
+     läuft. Angehalten bleibt das eingefrorene Bild des Videos stehen — dort
+     wäre das Standbild ein Rücksprung. */
+  .cmsvideo__standbild {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .cmsvideo[data-zustand='laeuft'] .cmsvideo__standbild,
+  .cmsvideo[data-zustand='pausiert'] .cmsvideo__standbild {
+    display: none;
   }
 
   /* ---------- Dezenter Halt/Weiter-Knopf ---------- */
@@ -229,6 +255,9 @@ const { src, poster, modus = 'einmal', label, class: klasse } = Astro.props;
 
       video.addEventListener('play', () => {
         grund = null;
+        // Sobald wieder etwas läuft, ist der Durchlauf-Ende-Fall vorbei —
+        // sonst würde der Wächter unten jedes spätere Anhalten verschlucken.
+        istBeendet = false;
         zustand('laeuft');
       });
       video.addEventListener('pause', () => {
@@ -264,9 +293,9 @@ const { src, poster, modus = 'einmal', label, class: klasse } = Astro.props;
       if (!schleife) {
         video.addEventListener('ended', () => {
           istBeendet = true;
-          // load() setzt das Element zurück und zeigt wieder das Poster —
-          // das „Standbild", auf dem der Neustart-Knopf sitzt.
-          video.load();
+          // Zurück an den Anfang; sichtbar wird wieder das Standbild-Bild,
+          // auf dem der Neustart-Knopf sitzt.
+          video.currentTime = 0;
           zustand('beendet');
         });
       }

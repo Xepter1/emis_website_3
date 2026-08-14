@@ -13,10 +13,24 @@ interface Props {
   alt?: string;
   class?: string;
   sizes?: string;
+  loading?: 'lazy' | 'eager';
+  decoding?: 'async' | 'sync' | 'auto';
   [key: string]: any;
 }
 
-const { bild, alt, class: klasse, sizes, ...rest } = Astro.props;
+// Standardmäßig verzögert laden — wie bei Astros <Image>. Ohne das lud die
+// Seite ALLE Bilder sofort (auf den Case-Seiten bis zu neun Stück à 2000 px)
+// und stellte damit alles andere hinten an, insbesondere das Video im
+// Streifen. Hero-Bilder setzen bewusst loading="eager".
+const {
+  bild,
+  alt,
+  class: klasse,
+  sizes,
+  loading = 'lazy',
+  decoding = 'async',
+  ...rest
+} = Astro.props;
 ---
 
 <img
@@ -27,5 +41,7 @@ const { bild, alt, class: klasse, sizes, ...rest } = Astro.props;
   height={bild.height}
   alt={alt ?? bild.alt}
   class={klasse}
+  loading={loading}
+  decoding={decoding}
   {...rest}
 />
